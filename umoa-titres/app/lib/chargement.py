@@ -134,7 +134,20 @@ def emissions_primaire() -> pd.DataFrame:
     3 950 lignes, jusqu'à une dizaine de tranches pour les souches profondes.
     L'agrégation par titre est faite dans `referentiel.py`.
     """
-    df = _lire("emissions_primaire.csv")
+    return _normaliser_primaire(_lire("emissions_primaire.csv"))
+
+
+@_cache
+def emissions_primaire_retenues() -> pd.DataFrame:
+    """Adjudications retenues pour l'analyse (``scripts/preparer_donnees_bi.py``,
+    ``filtrer_emissions_retenues``) : rendement moyen pondéré et montant retenu renseignés
+    et positifs, sans précision (ni échange, ni obligation de relance, ni adjudication
+    ciblée, ni rachat). Seulement des adjudications passées ; agrégats par opération
+    recalculés sur ces lignes."""
+    return _normaliser_primaire(_lire("emissions_primaire_retenues.csv"))
+
+
+def _normaliser_primaire(df: pd.DataFrame) -> pd.DataFrame:
     df = _dates(df, ["Date de l'opération", "Date de valeur", "Échéance"])
     df["Pays"] = df["Pays"].map(cle_pays).fillna(df["Émetteur"].map(cle_pays))
     # Les taux du primaire sont publiés en pourcentage, pas en décimal.
