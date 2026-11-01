@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "8a77cf6ff99605e409b3_src",
+  "position": {
+    "x": 16.388140161725065,
+    "y": 683.12668463611863,
+    "z": 12000,
+    "height": 36.226415094339622,
+    "width": 646.90026954177893,
+    "tabOrder": 12000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Sources : UMOA-Titres (umoatitres.org) et BRVM (brvm.org) — données consolidées via GitHub, actualisées les jours ouvrés à 18h UTC.",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "9px",
+                      "color": "#8a94a8"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

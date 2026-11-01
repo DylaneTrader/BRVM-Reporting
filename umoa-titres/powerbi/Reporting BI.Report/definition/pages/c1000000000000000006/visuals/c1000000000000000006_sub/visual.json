@@ -1,0 +1,39 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "c1000000000000000006_sub",
+  "position": {
+    "x": 15.960591133004927,
+    "y": 72.709359605911331,
+    "z": 7000,
+    "height": 42.5615763546798,
+    "width": 1248.4729064039409,
+    "tabOrder": 7000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Comparaison des courbes de rendement UEMOA par année de référence — source UMOA-Titres",
+                    "textStyle": {
+                      "fontSize": "12px",
+                      "color": "#5B6B8C",
+                      "fontFamily": "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif"
+                    }
+                  }
+                ],
+                "horizontalTextAlignment": "left"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

@@ -1,6 +1,7 @@
 name: Rafraîchir le dataset Power BI
 
-# Déclenche une actualisation du jeu de données Power BI, qui lit les données
+# Déclenche une actualisation du jeu de données Power BI du rapport BRVM
+# (brvm/powerbi/), qui lit les données
 # du dépôt DylaneTrader/Scraper-BRVM. Le scraping et les signaux y sont
 # produits en soirée les jours ouvrés : l'actualisation passe ensuite, à
 # 23 h 40 UTC, puis le lendemain à 6 h 40 UTC.

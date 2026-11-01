@@ -1,0 +1,25 @@
+relationship b1000000-0000-0000-0000-000000000001
+	fromColumn: 'Marché secondaire'.'Date de transaction'
+	toColumn: Dates.Date
+
+relationship b1000000-0000-0000-0000-000000000002
+	fromColumn: Calendrier.Date
+	toColumn: Dates.Date
+
+relationship b1000000-0000-0000-0000-000000000003
+	fromColumn: 'Courbes de taux'.Date
+	toColumn: Dates.Date
+
+relationship b1000000-0000-0000-0000-000000000004
+	fromColumn: 'BRVM Obligations'.'Date de cotation'
+	toColumn: Dates.Date
+
+relationship 9d0bd9ba-5075-4fdb-9510-6d0c60a317fd
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'Marché secondaire'.'Date d''échéance'
+	toColumn: LocalDateTable_9db8bb93-85e7-4f78-a9e8-4f68a2fa8ba2.Date
+
+relationship b1000000-0000-0000-0000-000000000005
+	fromColumn: 'Courbes pente'.Date
+	toColumn: Dates.Date
+

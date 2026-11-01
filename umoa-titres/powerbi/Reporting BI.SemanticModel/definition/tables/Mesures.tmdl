@@ -1,0 +1,226 @@
+table Mesures
+	lineageTag: a6000000-0000-0000-0000-000000000001
+
+	measure 'Volume global échangé' = SUM('Marché secondaire'[Volume global échangé])
+		formatString: #,0
+		lineageTag: a6000000-0000-0000-0000-000000000002
+
+	measure 'Volume global (Mds FCFA)' = DIVIDE([Volume global échangé], 1000000000)
+		formatString: #,0.0
+		lineageTag: a6000000-0000-0000-0000-000000000003
+
+	measure 'Volume nominal échangé' = SUM('Marché secondaire'[Volume nominal échangé])
+		formatString: #,0
+		lineageTag: a6000000-0000-0000-0000-000000000004
+
+	measure 'Nb transactions' = SUM('Marché secondaire'[Nombre de transactions])
+		formatString: #,0
+		lineageTag: a6000000-0000-0000-0000-000000000005
+
+	measure 'Nb lignes cotées' = COUNTROWS('Marché secondaire')
+		formatString: #,0
+		lineageTag: a6000000-0000-0000-0000-000000000006
+
+	measure 'Rendement moyen' = AVERAGE('Marché secondaire'[Rendement moyen])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a6000000-0000-0000-0000-000000000007
+
+	measure 'Rendement moyen pondéré' = DIVIDE(SUMX('Marché secondaire', 'Marché secondaire'[Volume nominal échangé] * 'Marché secondaire'[Rendement moyen]), SUM('Marché secondaire'[Volume nominal échangé]))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a6000000-0000-0000-0000-000000000008
+
+	measure 'Encours total' = SUM('Marché secondaire'[Encours])
+		formatString: #,0
+		lineageTag: a6000000-0000-0000-0000-000000000009
+
+	measure 'Nb émissions à venir' = CALCULATE(COUNTROWS(Calendrier), Calendrier[Statut] = "À venir")
+		formatString: #,0
+		lineageTag: a6000000-0000-0000-0000-000000000010
+
+	measure 'Nb émissions total' = COUNTROWS(Calendrier)
+		formatString: #,0
+		lineageTag: a6000000-0000-0000-0000-000000000011
+
+	measure 'Nb obligations cotées' = COUNTROWS('BRVM Obligations')
+		formatString: #,0
+		lineageTag: a6000000-0000-0000-0000-000000000012
+
+	measure 'Taux facial moyen (BRVM)' = AVERAGE('BRVM Obligations'[Taux facial])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a6000000-0000-0000-0000-000000000013
+
+	measure 'Taux après lissage moyen' = AVERAGE('Courbes de taux'[Taux après lissage])
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a6000000-0000-0000-0000-000000000014
+
+	measure 'Dernière date transaction' = MAX('Marché secondaire'[Date de transaction])
+		formatString: dd/mm/yyyy
+		lineageTag: a6000000-0000-0000-0000-000000000015
+
+	measure 'Dernière cotation BRVM' = MAX('BRVM Obligations'[Date de cotation])
+		formatString: dd/mm/yyyy
+		lineageTag: a6000000-0000-0000-0000-000000000016
+
+	measure 'Dernière courbe (date)' = MAX('Courbes de taux'[Date])
+		formatString: dd/mm/yyyy
+		lineageTag: a6000000-0000-0000-0000-000000000017
+
+	measure 'Texte mise à jour' = "Données au " & FORMAT(MAX('BRVM Obligations'[Date de cotation]), "DD/MM/YYYY")
+		lineageTag: a6000000-0000-0000-0000-000000000018
+
+	measure 'Taux dernière courbe' = CALCULATE(AVERAGE('Courbes de taux'[Taux après lissage]), 'Courbes de taux'[Dernière courbe] = TRUE())
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a6000000-0000-0000-0000-000000000020
+
+	measure 'Taux zéro dernière courbe' = CALCULATE(AVERAGE('Courbes de taux'[Taux zéro coupon]), 'Courbes de taux'[Dernière courbe] = TRUE())
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a6000000-0000-0000-0000-000000000021
+
+	/// YTM moyen pondéré par le volume nominal échangé (rendement actuariel).
+	measure 'YTM moyen pondéré' = DIVIDE(SUMX('Marché secondaire', 'Marché secondaire'[Volume nominal échangé] * 'Marché secondaire'[YTM]), SUM('Marché secondaire'[Volume nominal échangé]))
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a6000000-0000-0000-0000-000000000022
+
+	/// Duration modifiée moyenne, pondérée par le volume (sensibilité du portefeuille).
+	measure 'Duration modifiée moyenne' = DIVIDE(SUMX(FILTER('Marché secondaire', NOT ISBLANK('Marché secondaire'[Duration modifiée])), 'Marché secondaire'[Volume nominal échangé] * 'Marché secondaire'[Duration modifiée]), SUMX(FILTER('Marché secondaire', NOT ISBLANK('Marché secondaire'[Duration modifiée])), 'Marché secondaire'[Volume nominal échangé]))
+		formatString: 0.00
+		lineageTag: a6000000-0000-0000-0000-000000000023
+
+	measure 'Duration Macaulay moyenne' = DIVIDE(SUMX(FILTER('Marché secondaire', NOT ISBLANK('Marché secondaire'[Duration Macaulay])), 'Marché secondaire'[Volume nominal échangé] * 'Marché secondaire'[Duration Macaulay]), SUMX(FILTER('Marché secondaire', NOT ISBLANK('Marché secondaire'[Duration Macaulay])), 'Marché secondaire'[Volume nominal échangé]))
+		formatString: 0.00
+		lineageTag: a6000000-0000-0000-0000-000000000024
+
+	measure 'Convexité moyenne' = DIVIDE(SUMX(FILTER('Marché secondaire', NOT ISBLANK('Marché secondaire'[Convexité])), 'Marché secondaire'[Volume nominal échangé] * 'Marché secondaire'[Convexité]), SUMX(FILTER('Marché secondaire', NOT ISBLANK('Marché secondaire'[Convexité])), 'Marché secondaire'[Volume nominal échangé]))
+		formatString: 0.00
+		lineageTag: a6000000-0000-0000-0000-000000000025
+
+	measure 'Maturité résiduelle moyenne' = DIVIDE(SUMX(FILTER('Marché secondaire', NOT ISBLANK('Marché secondaire'[Maturité résiduelle (années)])), 'Marché secondaire'[Volume nominal échangé] * 'Marché secondaire'[Maturité résiduelle (années)]), SUMX(FILTER('Marché secondaire', NOT ISBLANK('Marché secondaire'[Maturité résiduelle (années)])), 'Marché secondaire'[Volume nominal échangé]))
+		formatString: 0.00
+		lineageTag: a6000000-0000-0000-0000-000000000026
+
+	/// Pente moyenne de la courbe (spread de maturité 10 ans - 2 ans), en points de base.
+	measure 'Pente 2-10 ans moyenne (pb)' = AVERAGE('Courbes pente'[Pente 2-10 ans (pb)])
+		formatString: #,0.0
+		lineageTag: a6000000-0000-0000-0000-000000000027
+
+	measure 'Spread moyen vs UEMOA (pb)' = AVERAGE('Courbes de taux'[Spread vs moyenne (pb)])
+		formatString: #,0.0
+		lineageTag: a6000000-0000-0000-0000-000000000028
+
+	/// Taux après lissage à la date sélectionnée dans le slicer ; à défaut de
+	/// sélection, retombe sur la dernière courbe disponible. Permet à la courbe
+	/// de rester lisible quelle que soit la date choisie (contrairement à
+	/// [Taux dernière courbe] qui se vide sur une date ancienne).
+	measure 'Taux courbe (date sélectionnée)' =
+			VAR d =
+			    SELECTEDVALUE ( 'Courbes de taux'[Date], CALCULATE ( MAX ( 'Courbes de taux'[Date] ), REMOVEFILTERS ( 'Courbes de taux'[Date] ) ) )
+			RETURN
+			    CALCULATE (
+			        AVERAGE ( 'Courbes de taux'[Taux après lissage] ),
+			        'Courbes de taux'[Date] = d,
+			        REMOVEFILTERS ( 'Courbes de taux'[Date] )
+			    )
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a6000000-0000-0000-0000-000000000035
+
+	/// Taux au dernier point de courbe de l'année en contexte. Agrégat UEMOA par défaut ; bascule sur le taux du pays si un seul pays est sélectionné.
+	measure 'Taux courbe de réf.' =
+			VAR d =
+			    CALCULATE ( MAX ( 'Courbes de taux'[Date] ), REMOVEFILTERS ( 'Courbes de taux'[Maturité] ) )
+			RETURN
+			    IF (
+			        HASONEVALUE ( 'Courbes de taux'[Pays] ),
+			        CALCULATE ( AVERAGE ( 'Courbes de taux'[Taux après lissage] ), 'Courbes de taux'[Date] = d ),
+			        CALCULATE ( AVERAGE ( 'Courbes de taux'[Taux moyen UEMOA] ), 'Courbes de taux'[Date] = d )
+			    )
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a6000000-0000-0000-0000-000000000029
+
+	/// Variation du taux de référence par rapport à l'année précédente (points de base), par maturité.
+	measure 'Écart taux a/a (pb)' =
+			VAR anc = SELECTEDVALUE ( Dates[Année] )
+			VAR tN = [Taux courbe de réf.]
+			VAR tN1 =
+			    CALCULATE ( [Taux courbe de réf.], REMOVEFILTERS ( Dates ), Dates[Année] = anc - 1 )
+			RETURN
+			    IF ( NOT ISBLANK ( tN1 ), ( tN - tN1 ) * 10000 )
+		formatString: #,0.0
+		lineageTag: a6000000-0000-0000-0000-000000000030
+
+	/// Spread de maturité 1 an → 3 ans au point de courbe de référence de l'année (pb).
+	/// Suit le pays sélectionné (taux après lissage) ou la moyenne UEMOA à défaut.
+	measure 'Pente 1-3 ans réf. (pb)' =
+			VAR d =
+			    CALCULATE ( MAX ( 'Courbes de taux'[Date] ), REMOVEFILTERS ( 'Courbes de taux'[Maturité] ) )
+			VAR estPays = HASONEVALUE ( 'Courbes de taux'[Pays] )
+			VAR t1 =
+			    CALCULATE ( IF ( estPays, AVERAGE ( 'Courbes de taux'[Taux après lissage] ), AVERAGE ( 'Courbes de taux'[Taux moyen UEMOA] ) ), 'Courbes de taux'[Date] = d, 'Courbes de taux'[Maturité] = "1 an" )
+			VAR t3 =
+			    CALCULATE ( IF ( estPays, AVERAGE ( 'Courbes de taux'[Taux après lissage] ), AVERAGE ( 'Courbes de taux'[Taux moyen UEMOA] ) ), 'Courbes de taux'[Date] = d, 'Courbes de taux'[Maturité] = "3 ans" )
+			RETURN
+			    ( t3 - t1 ) * 10000
+		formatString: #,0.0
+		lineageTag: a6000000-0000-0000-0000-000000000031
+
+	/// Spread de maturité 5 ans → 7 ans au point de courbe de référence de l'année (pb).
+	/// Suit le pays sélectionné (taux après lissage) ou la moyenne UEMOA à défaut.
+	measure 'Pente 5-7 ans réf. (pb)' =
+			VAR d =
+			    CALCULATE ( MAX ( 'Courbes de taux'[Date] ), REMOVEFILTERS ( 'Courbes de taux'[Maturité] ) )
+			VAR estPays = HASONEVALUE ( 'Courbes de taux'[Pays] )
+			VAR t5 =
+			    CALCULATE ( IF ( estPays, AVERAGE ( 'Courbes de taux'[Taux après lissage] ), AVERAGE ( 'Courbes de taux'[Taux moyen UEMOA] ) ), 'Courbes de taux'[Date] = d, 'Courbes de taux'[Maturité] = "5 ans" )
+			VAR t7 =
+			    CALCULATE ( IF ( estPays, AVERAGE ( 'Courbes de taux'[Taux après lissage] ), AVERAGE ( 'Courbes de taux'[Taux moyen UEMOA] ) ), 'Courbes de taux'[Date] = d, 'Courbes de taux'[Maturité] = "7 ans" )
+			RETURN
+			    ( t7 - t5 ) * 10000
+		formatString: #,0.0
+		lineageTag: a6000000-0000-0000-0000-000000000032
+
+	/// Spread de maturité 7 ans → 10 ans au point de courbe de référence de l'année (pb).
+	/// Suit le pays sélectionné (taux après lissage) ou la moyenne UEMOA à défaut.
+	measure 'Pente 7-10 ans réf. (pb)' =
+			VAR d =
+			    CALCULATE ( MAX ( 'Courbes de taux'[Date] ), REMOVEFILTERS ( 'Courbes de taux'[Maturité] ) )
+			VAR estPays = HASONEVALUE ( 'Courbes de taux'[Pays] )
+			VAR t7 =
+			    CALCULATE ( IF ( estPays, AVERAGE ( 'Courbes de taux'[Taux après lissage] ), AVERAGE ( 'Courbes de taux'[Taux moyen UEMOA] ) ), 'Courbes de taux'[Date] = d, 'Courbes de taux'[Maturité] = "7 ans" )
+			VAR t10 =
+			    CALCULATE ( IF ( estPays, AVERAGE ( 'Courbes de taux'[Taux après lissage] ), AVERAGE ( 'Courbes de taux'[Taux moyen UEMOA] ) ), 'Courbes de taux'[Date] = d, 'Courbes de taux'[Maturité] = "10 ans" )
+			RETURN
+			    ( t10 - t7 ) * 10000
+		formatString: #,0.0
+		lineageTag: a6000000-0000-0000-0000-000000000033
+
+	/// Pente globale 2 ans → 10 ans au point de courbe de référence de l'année (pb).
+	/// Suit le pays sélectionné (taux après lissage) ou la moyenne UEMOA à défaut.
+	measure 'Pente 2-10 ans réf. (pb)' =
+			VAR d =
+			    CALCULATE ( MAX ( 'Courbes de taux'[Date] ), REMOVEFILTERS ( 'Courbes de taux'[Maturité] ) )
+			VAR estPays = HASONEVALUE ( 'Courbes de taux'[Pays] )
+			VAR t2 =
+			    CALCULATE ( IF ( estPays, AVERAGE ( 'Courbes de taux'[Taux après lissage] ), AVERAGE ( 'Courbes de taux'[Taux moyen UEMOA] ) ), 'Courbes de taux'[Date] = d, 'Courbes de taux'[Maturité] = "2 ans" )
+			VAR t10 =
+			    CALCULATE ( IF ( estPays, AVERAGE ( 'Courbes de taux'[Taux après lissage] ), AVERAGE ( 'Courbes de taux'[Taux moyen UEMOA] ) ), 'Courbes de taux'[Date] = d, 'Courbes de taux'[Maturité] = "10 ans" )
+			RETURN
+			    ( t10 - t2 ) * 10000
+		formatString: #,0.0
+		lineageTag: a6000000-0000-0000-0000-000000000034
+
+	column Repère
+		dataType: string
+		isHidden
+		lineageTag: a6000000-0000-0000-0000-000000000019
+		summarizeBy: none
+		sourceColumn: Repère
+
+	partition Mesures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Repère = text], {{" "}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

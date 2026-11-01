@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "c1000000000000000003_src",
+  "position": {
+    "x": 16.388140161725065,
+    "y": 680.53908355795147,
+    "z": 7000,
+    "height": 39.676549865229106,
+    "width": 885.822102425876,
+    "tabOrder": 7000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Source : UMOA-Titres — Courbe des taux (umoatitres.org/fr/ressources-2/courbe-des-taux). Publication hebdomadaire, le vendredi.",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "9px",
+                      "color": "#8a94a8"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

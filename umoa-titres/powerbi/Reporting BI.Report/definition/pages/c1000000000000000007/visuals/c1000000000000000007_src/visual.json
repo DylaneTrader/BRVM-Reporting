@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "c1000000000000000007_src",
+  "position": {
+    "x": 16.388140161725065,
+    "y": 681.40161725067378,
+    "z": 13000,
+    "height": 38.81401617250674,
+    "width": 1247.2237196765498,
+    "tabOrder": 13000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Source : UMOA-Titres — Marché secondaire (umoatitres.org). Conventions actuarielles UMOA ; agrégats pondérés par le volume nominal.",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "9px",
+                      "color": "#8a94a8"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

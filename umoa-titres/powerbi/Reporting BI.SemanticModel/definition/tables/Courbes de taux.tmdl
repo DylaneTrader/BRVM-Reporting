@@ -1,0 +1,96 @@
+table 'Courbes de taux'
+	lineageTag: a3000000-0000-0000-0000-000000000001
+
+	column Date
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: a3000000-0000-0000-0000-000000000002
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Pays
+		dataType: string
+		lineageTag: a3000000-0000-0000-0000-000000000003
+		summarizeBy: none
+		sourceColumn: Pays
+
+	column Maturité
+		dataType: string
+		lineageTag: a3000000-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: Maturité
+		sortByColumn: 'Maturité (années)'
+
+	column 'Maturité (années)'
+		dataType: double
+		formatString: 0.00
+		lineageTag: a3000000-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: Maturité (années)
+
+	column 'Taux zéro coupon'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a3000000-0000-0000-0000-000000000006
+		summarizeBy: none
+		sourceColumn: Taux zéro coupon
+
+	column 'Taux après lissage'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a3000000-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: Taux après lissage
+
+	column 'Dernière courbe'
+		dataType: boolean
+		lineageTag: a3000000-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: Dernière courbe
+
+	column 'Taux moyen UEMOA'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a3000000-0000-0000-0000-000000000009
+		summarizeBy: none
+		sourceColumn: Taux moyen UEMOA
+
+	column 'Spread vs moyenne (pb)'
+		dataType: double
+		formatString: #,0.0
+		lineageTag: a3000000-0000-0000-0000-000000000010
+		summarizeBy: none
+		sourceColumn: Spread vs moyenne (pb)
+
+	column 'Spread vs Côte d''Ivoire (pb)'
+		dataType: double
+		formatString: #,0.0
+		lineageTag: a3000000-0000-0000-0000-000000000011
+		summarizeBy: none
+		sourceColumn: Spread vs Côte d'Ivoire (pb)
+
+	partition 'Courbes de taux' = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(GitHubFichier("courbes_taux.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Promu = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Types = Table.TransformColumnTypes(Promu, {
+				        {"Date", type date},
+				        {"Pays", type text},
+				        {"Maturité", type text},
+				        {"Maturité (années)", type number},
+				        {"Taux zéro coupon", type number},
+				        {"Taux après lissage", type number},
+				        {"Taux moyen UEMOA", type number},
+				        {"Spread vs moyenne (pb)", type number},
+				        {"Spread vs Côte d'Ivoire (pb)", type number}
+				    }, "en-US"),
+				    Booleen = Table.TransformColumns(Types, {{"Dernière courbe", each Text.Upper(Text.From(_)) = "TRUE", type logical}})
+				in
+				    Booleen
+
+	annotation PBI_ResultType = Table
+
