@@ -1,0 +1,84 @@
+// Schéma Prisma — Simulateur de portefeuille BRVM
+// SQLite local. Les montants en FCFA sont stockés en Float (la BRVM cote en
+// FCFA entiers, mais les frais peuvent produire des décimales).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Un utilisateur local du simulateur.
+model User {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  portfolio Portfolio?
+}
+
+/// Portefeuille d'un utilisateur. Contient le solde de liquidités (cash balance)
+/// ainsi que les lignes de titres détenues et l'historique des transactions.
+model Portfolio {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Solde de liquidités disponible en FCFA.
+  cash      Float    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  holdings     Holding[]
+  transactions Transaction[]
+}
+
+/// Une ligne de position : titres d'une valeur (ticker) détenus.
+/// Pas de vente à découvert -> quantity est toujours >= 0.
+model Holding {
+  id          String   @id @default(cuid())
+  portfolioId String
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  /// Symbole de la valeur, ex. "SGBC_ci".
+  ticker      String
+  /// Quantité de titres détenus (nombre entier de titres).
+  quantity    Int      @default(0)
+  /// Prix de revient unitaire moyen pondéré (PRU) en FCFA, frais d'achat inclus.
+  avgCost     Float    @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([portfolioId, ticker])
+}
+
+/// Journal immuable de toutes les opérations (dépôt, retrait, achat, vente).
+model Transaction {
+  id          String   @id @default(cuid())
+  portfolioId String
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+
+  /// DEPOSIT | WITHDRAW | BUY | SELL
+  type        String
+  /// Valeur concernée (null pour DEPOSIT / WITHDRAW).
+  ticker      String?
+  /// Quantité de titres (null pour cash).
+  quantity    Int?
+  /// Prix d'exécution unitaire en FCFA (null pour cash).
+  price       Float?
+  /// Frais de courtage appliqués en FCFA.
+  fees        Float    @default(0)
+  /// Variation nette du cash : positive = entrée de cash, négative = sortie.
+  cashDelta   Float
+  /// Solde de liquidités APRÈS l'opération (instantané, en FCFA).
+  cashAfter   Float
+
+  createdAt   DateTime @default(now())
+
+  @@index([portfolioId, createdAt])
+}

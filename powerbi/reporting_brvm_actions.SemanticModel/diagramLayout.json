@@ -1,0 +1,165 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 32107.664270415517,
+        "y": 5743.7397431219033
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 39393.409712113506,
+            "y": 11398.51694474302
+          },
+          "nodeIndex": "_Mesures",
+          "nodeLineageTag": "b970d31a-1336-4c89-949e-0fd2271752ae",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 1
+        },
+        {
+          "location": {
+            "x": 39887.409712113506,
+            "y": 11108.51694474302
+          },
+          "nodeIndex": "Actualites",
+          "nodeLineageTag": "f7287fbf-31d1-4d8c-9bab-910d6005032b",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 2
+        },
+        {
+          "location": {
+            "x": 38838.168012978458,
+            "y": 10414.909485229869
+          },
+          "nodeIndex": "Cotations_Actions",
+          "nodeLineageTag": "e2ec37f4-2921-4441-82de-fdaead9153d3",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 3
+        },
+        {
+          "location": {
+            "x": 40446.552901173789,
+            "y": 10785.049014554777
+          },
+          "nodeIndex": "Cotations_Indices",
+          "nodeLineageTag": "07fb4152-52c4-4f6b-a7dd-3613b6fdba4c",
+          "size": {
+            "height": 296,
+            "width": 234
+          },
+          "zIndex": 4
+        },
+        {
+          "location": {
+            "x": 38999.196440523774,
+            "y": 12020.061079479847
+          },
+          "nodeIndex": "Dim_Action",
+          "nodeLineageTag": "f5392595-f858-4072-891b-3680e08a8931",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 11
+        },
+        {
+          "location": {
+            "x": 39954.075465697788,
+            "y": 10294.717268300466
+          },
+          "nodeIndex": "Dim_Date",
+          "nodeLineageTag": "1f716e04-3f1a-445a-b287-012942dd37f2",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 5
+        },
+        {
+          "location": {
+            "x": 42080.161413793394,
+            "y": 10913.413186207177
+          },
+          "nodeIndex": "Dim_Indice",
+          "nodeLineageTag": "df5dde27-c3fa-4cc2-a8f3-cc4857ed7036",
+          "size": {
+            "height": 176,
+            "width": 234
+          },
+          "zIndex": 6
+        },
+        {
+          "location": {
+            "x": 41139.218522471783,
+            "y": 9846.6261818872663
+          },
+          "nodeIndex": "Dividendes",
+          "nodeLineageTag": "469d5cfb-38e2-448d-af74-145ea5fcd61e",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 7
+        },
+        {
+          "location": {
+            "x": 38385.860329689232,
+            "y": 11541.269508683476
+          },
+          "nodeIndex": "Fondamentaux",
+          "nodeLineageTag": "cdca1b74-7ede-43bc-abfb-6ccc6b249517",
+          "size": {
+            "height": 228.33032089314565,
+            "width": 234
+          },
+          "zIndex": 8
+        },
+        {
+          "location": {
+            "x": 39131.409712113506,
+            "y": 10908.51694474302
+          },
+          "nodeIndex": "P_Periode",
+          "nodeLineageTag": "301d8ac2-aefd-4dff-be18-21c61e2028b0",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 9
+        },
+        {
+          "location": {
+            "x": 40449.982796740653,
+            "y": 11200.501180757276
+          },
+          "nodeIndex": "Resume_Scraping",
+          "nodeLineageTag": "73fff0c6-88e2-4da2-98ce-02d277a9fd47",
+          "size": {
+            "height": 224,
+            "width": 234
+          },
+          "zIndex": 10
+        }
+      ],
+      "name": "Toutes les tables",
+      "zoomValue": 12.570207430874476,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "Toutes les tables",
+  "defaultDiagram": "Toutes les tables"
+}

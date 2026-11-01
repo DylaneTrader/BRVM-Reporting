@@ -1,0 +1,61 @@
+table Resume_Scraping
+	lineageTag: 73fff0c6-88e2-4da2-98ce-02d277a9fd47
+
+	column Ticker
+		dataType: string
+		lineageTag: 69972cb7-03b8-40f0-b337-5e0e7b2e507b
+		summarizeBy: none
+		sourceColumn: Ticker
+
+	column Type
+		dataType: string
+		lineageTag: 83509dd5-1d04-49d5-bfc3-f30269d921bb
+		summarizeBy: none
+		sourceColumn: Type
+
+	column Nb_Lignes
+		dataType: int64
+		formatString: #,0
+		lineageTag: bc864f9e-143c-4dd4-9a5c-b822c7f0580f
+		summarizeBy: sum
+		sourceColumn: Nb_Lignes
+
+	column Date_Min
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: f0b6b8a5-4db6-4828-9020-a1b5db9435bc
+		summarizeBy: none
+		sourceColumn: Date_Min
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Date_Max
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: 3dabc86a-420d-48f4-98b2-9f9df81a4a93
+		summarizeBy: none
+		sourceColumn: Date_Max
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Dernier_Cours
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 6c1e4c36-e8b4-432d-868b-a9acc4e80189
+		summarizeBy: none
+		sourceColumn: Dernier_Cours
+
+	partition Resume_Scraping = m
+		mode: import
+		source =
+				let
+				    CheminDonnees = "c:\Users\DYLANE\OneDrive - CGF BOURSE\Bureau\MES MINI-APPS\BRVM app\data",
+				    Source = Csv.Document(File.Contents(CheminDonnees & "\resume_scraping.csv"), [Delimiter = ";", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    EnTetes = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    TypesDates = Table.TransformColumnTypes(EnTetes, {{"Date_Min", type date}, {"Date_Max", type date}}, "en-US"),
+				    Types = Table.TransformColumnTypes(TypesDates, {{"Ticker", type text}, {"Type", type text}, {"Nb_Lignes", Int64.Type}, {"Dernier_Cours", type number}}, "fr-FR")
+				in
+				    Types
+
+	annotation PBI_ResultType = Table
+

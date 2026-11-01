@@ -1,0 +1,146 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "c3d4e5f6a7b829304c5d",
+  "displayName": "Analyse fondamentale",
+  "displayOption": "FitToWidth",
+  "height": 1320,
+  "width": 1280,
+  "objects": {
+    "background": [
+      {
+        "properties": {
+          "color": {
+            "solid": {
+              "color": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'#F4F6FA'"
+                  }
+                }
+              }
+            }
+          },
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "0D"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "visualInteractions": [
+    {
+      "source": "cc33dd44ee55ff66aa04",
+      "target": "cc33dd44ee55ff66aa30",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa04",
+      "target": "cc33dd44ee55ff66aa31",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa04",
+      "target": "cc33dd44ee55ff66aa32",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa04",
+      "target": "cc33dd44ee55ff66aa33",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa04",
+      "target": "cc33dd44ee55ff66aa34",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa04",
+      "target": "cc33dd44ee55ff66aa35",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa04",
+      "target": "cc33dd44ee55ff66aa36",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa31",
+      "target": "cc33dd44ee55ff66aa10",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa31",
+      "target": "cc33dd44ee55ff66aa11",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa31",
+      "target": "cc33dd44ee55ff66aa12",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa31",
+      "target": "cc33dd44ee55ff66aa13",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa31",
+      "target": "cc33dd44ee55ff66aa14",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa31",
+      "target": "cc33dd44ee55ff66aa15",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa31",
+      "target": "cc33dd44ee55ff66aa16",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa31",
+      "target": "cc33dd44ee55ff66aa17",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa31",
+      "target": "cc33dd44ee55ff66aa18",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa31",
+      "target": "cc33dd44ee55ff66aa20",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa31",
+      "target": "cc33dd44ee55ff66aa21",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa31",
+      "target": "cc33dd44ee55ff66aa22",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa31",
+      "target": "cc33dd44ee55ff66aa23",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa31",
+      "target": "cc33dd44ee55ff66aa24",
+      "type": "NoFilter"
+    },
+    {
+      "source": "cc33dd44ee55ff66aa31",
+      "target": "cc33dd44ee55ff66aa25",
+      "type": "NoFilter"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "aa11bb22cc33dd44ee17",
+  "position": {
+    "x": 1045.3908355795147,
+    "y": 116.44204851752021,
+    "z": 14000,
+    "height": 91.428571428571431,
+    "width": 227.70889487870619,
+    "tabOrder": 14000
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
+                  "Property": "Capitalisation (Mrd FCFA)"
+                }
+              },
+              "queryRef": "_Mesures.Capitalisation (Mrd FCFA)",
+              "nativeQueryRef": "Capitalisation (Mrd FCFA)",
+              "displayName": "Capitalisation (Mrd FCFA)"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

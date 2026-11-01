@@ -1,0 +1,39 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "aa11bb22cc33dd44ee08",
+  "position": {
+    "x": 526.14555256064693,
+    "y": 116.44204851752021,
+    "z": 6000,
+    "height": 91.428571428571431,
+    "width": 227.70889487870619,
+    "tabOrder": 7000
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
+                  "Property": "BRVM Composite YTD"
+                }
+              },
+              "queryRef": "_Mesures.BRVM Composite YTD",
+              "nativeQueryRef": "BRVM Composite YTD",
+              "displayName": "Performance YTD"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

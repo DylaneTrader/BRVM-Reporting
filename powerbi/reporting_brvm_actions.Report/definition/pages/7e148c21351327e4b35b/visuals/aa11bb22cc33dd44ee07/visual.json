@@ -1,0 +1,39 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "aa11bb22cc33dd44ee07",
+  "position": {
+    "x": 269.11051212938,
+    "y": 116.44204851752021,
+    "z": 5000,
+    "height": 91.428571428571431,
+    "width": 227.70889487870619,
+    "tabOrder": 6000
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
+                  "Property": "BRVM Composite Var Jour"
+                }
+              },
+              "queryRef": "_Mesures.BRVM Composite Var Jour",
+              "nativeQueryRef": "BRVM Composite Var Jour",
+              "displayName": "Variation du jour"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

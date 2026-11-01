@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "cc33dd44ee55ff66aa12",
+  "position": {
+    "x": 286,
+    "y": 136,
+    "z": 202,
+    "width": 138,
+    "height": 84
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
+                  "Property": "Marge Nette (dernier ex.)"
+                }
+              },
+              "queryRef": "_Mesures.Marge Nette (dernier ex.)",
+              "nativeQueryRef": "Marge Nette (dernier ex.)",
+              "displayName": "Marge nette"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

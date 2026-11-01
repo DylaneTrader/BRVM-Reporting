@@ -1,0 +1,39 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "aa11bb22cc33dd44ee09",
+  "position": {
+    "x": 790.94339622641508,
+    "y": 116.44204851752021,
+    "z": 7000,
+    "height": 91.428571428571431,
+    "width": 227.70889487870619,
+    "tabOrder": 8000
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
+                  "Property": "Actions Suivies"
+                }
+              },
+              "queryRef": "_Mesures.Actions Suivies",
+              "nativeQueryRef": "Actions Suivies",
+              "displayName": "Actions suivies"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

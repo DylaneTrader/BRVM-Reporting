@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "cc33dd44ee55ff66aa15",
+  "position": {
+    "x": 712,
+    "y": 136,
+    "z": 205,
+    "width": 138,
+    "height": 84
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
+                  "Property": "Dividende Fond"
+                }
+              },
+              "queryRef": "_Mesures.Dividende Fond",
+              "nativeQueryRef": "Dividende Fond",
+              "displayName": "Dividende (FCFA)"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

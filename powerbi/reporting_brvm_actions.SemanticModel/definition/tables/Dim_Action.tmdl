@@ -1,0 +1,158 @@
+table Dim_Action
+	lineageTag: f5392595-f858-4072-891b-3680e08a8931
+
+	column Symbol
+		dataType: string
+		lineageTag: f31428fb-21d9-4d44-aa26-c96baec1124b
+		summarizeBy: none
+		sourceColumn: Symbol
+
+	column Name
+		dataType: string
+		lineageTag: b634e711-fb5a-4e42-844e-5b22b05ef4c5
+		summarizeBy: none
+		sourceColumn: Name
+
+	column Secteur
+		dataType: string
+		lineageTag: 0ca76373-57ff-4589-b759-baff924cd597
+		summarizeBy: none
+		sourceColumn: Secteur
+
+	column SecteurCourt
+		dataType: string
+		lineageTag: 2487c7d4-648f-4248-a160-6ff2a8a9dee4
+		summarizeBy: none
+		sourceColumn: SecteurCourt
+
+	column ISIN
+		dataType: string
+		lineageTag: c1f7a25d-5f6d-48e5-a88b-a6a995566604
+		summarizeBy: none
+		sourceColumn: ISIN
+
+	column NombreTitres
+		dataType: double
+		formatString: #,0
+		lineageTag: 43d409cd-1b92-43f8-9342-b928f2abed94
+		summarizeBy: none
+		sourceColumn: NombreTitres
+
+	column PER
+		dataType: double
+		formatString: 0.00
+		lineageTag: 27f88f66-75d3-463f-b346-1101fac91643
+		summarizeBy: none
+		sourceColumn: PER
+
+	column Dividende
+		dataType: double
+		formatString: #,0.00
+		lineageTag: babb2150-31b8-434f-93f2-cb00a0b90373
+		summarizeBy: none
+		sourceColumn: Dividende
+
+	column BNPA
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 5b0aa028-e958-4c21-a26b-ee94238d467f
+		summarizeBy: none
+		sourceColumn: BNPA
+
+	column ChiffreAffaires
+		dataType: double
+		formatString: #,0
+		lineageTag: a4e97647-22fc-40c1-ab8f-6b861d72aa83
+		summarizeBy: none
+		sourceColumn: ChiffreAffaires
+
+	column ResultatNet
+		dataType: double
+		formatString: #,0
+		lineageTag: 8197465d-b7a7-4c5f-9b71-03a41854c6a3
+		summarizeBy: none
+		sourceColumn: ResultatNet
+
+	column ValorisationMFCFA
+		dataType: double
+		formatString: #,0
+		lineageTag: 79a8aa6a-8e1c-435b-9888-034daaad7f51
+		summarizeBy: none
+		sourceColumn: ValorisationMFCFA
+
+	column FlottantPct
+		dataType: double
+		formatString: 0.00
+		lineageTag: 9f2ae6ff-b4a0-49c7-884d-c70ea6297d68
+		summarizeBy: none
+		sourceColumn: FlottantPct
+
+	column Description
+		dataType: string
+		lineageTag: c8b162e6-0697-44d5-8b35-17428c422345
+		summarizeBy: none
+		sourceColumn: Description
+
+	column Dirigeants
+		dataType: string
+		lineageTag: 1f15e6f7-f760-4f38-8a6f-b8656cc94d7e
+		summarizeBy: none
+		sourceColumn: Dirigeants
+
+	column Adresse
+		dataType: string
+		lineageTag: f251af99-2fa1-4807-aa3a-1708970696e1
+		summarizeBy: none
+		sourceColumn: Adresse
+
+	column Telephone
+		dataType: string
+		lineageTag: 5bb55060-e647-41d1-bafa-dfdcba6c498b
+		summarizeBy: none
+		sourceColumn: Telephone
+
+	partition Dim_Action = m
+		mode: import
+		source =
+				let
+				    NettoyerNombre = (t as nullable text) as nullable number =>
+				        let
+				            brut = if t = null then null else Text.Trim(t),
+				            sansUnites = if brut = null then null else Text.Replace(Text.Replace(Text.Replace(Text.Replace(brut, "MFCFA", ""), "FCFA", ""), "%", ""), "×", ""),
+				            sansEspaces = if sansUnites = null then null else Text.Replace(Text.Replace(sansUnites, "#(00A0)", ""), " ", ""),
+				            resultat = if sansEspaces = null or sansEspaces = "" or sansEspaces = "N/A" or sansEspaces = "-" then null else try Number.FromText(Text.Replace(sansEspaces, ",", "."), "en-US") otherwise null
+				        in
+				            resultat,
+				    CheminDonnees = "c:\Users\DYLANE\OneDrive - CGF BOURSE\Bureau\MES MINI-APPS\BRVM app\data",
+				    Source = Folder.Files(CheminDonnees & "\societes"),
+				    FichiersJson = Table.SelectRows(Source, each Text.EndsWith([Name], "_societe.json")),
+				    AjoutRecord = Table.AddColumn(FichiersJson, "R", each Json.Document([Content], 65001)),
+				    Lignes = Table.SelectColumns(AjoutRecord, {"R"}),
+				    Construit = Table.AddColumn(Lignes, "Ligne", each
+				        let r = [R] in
+				        [
+				            Symbol = Record.FieldOrDefault(r, "ticker", null),
+				            Name = Record.FieldOrDefault(r, "Nom", null),
+				            Secteur = Record.FieldOrDefault(r, "Secteur", null),
+				            SecteurCourt = let s = Record.FieldOrDefault(r, "Secteur", null) in if s = null then null else Text.Trim(Text.Replace(s, "BRVM - ", "")),
+				            ISIN = Record.FieldOrDefault(r, "ISIN", null),
+				            NombreTitres = NettoyerNombre(Record.FieldOrDefault(r, "Nombre_Titres", Record.FieldOrDefault(r, "Nombre de titres", null))),
+				            PER = NettoyerNombre(Record.FieldOrDefault(r, "PER", null)),
+				            Dividende = NettoyerNombre(Record.FieldOrDefault(r, "Dividende", null)),
+				            BNPA = NettoyerNombre(Record.FieldOrDefault(r, "BNPA", null)),
+				            ChiffreAffaires = NettoyerNombre(Record.FieldOrDefault(r, "Chiffre d'affaires", null)),
+				            ResultatNet = NettoyerNombre(Record.FieldOrDefault(r, "Résultat net", null)),
+				            ValorisationMFCFA = NettoyerNombre(Record.FieldOrDefault(r, "Valorisation", Record.FieldOrDefault(r, "Valorisation de la société", null))),
+				            FlottantPct = NettoyerNombre(Record.FieldOrDefault(r, "Flottant_Pct", Record.FieldOrDefault(r, "Flottant", null))),
+				            Description = Record.FieldOrDefault(r, "La société", null),
+				            Dirigeants = Record.FieldOrDefault(r, "Dirigeants", null),
+				            Adresse = Record.FieldOrDefault(r, "Adresse", null),
+				            Telephone = Record.FieldOrDefault(r, "Téléphone", null)
+				        ]),
+				    Etendu = Table.ExpandRecordColumn(Table.SelectColumns(Construit, {"Ligne"}), "Ligne", {"Symbol", "Name", "Secteur", "SecteurCourt", "ISIN", "NombreTitres", "PER", "Dividende", "BNPA", "ChiffreAffaires", "ResultatNet", "ValorisationMFCFA", "FlottantPct", "Description", "Dirigeants", "Adresse", "Telephone"}),
+				    Types = Table.TransformColumnTypes(Etendu, {{"Symbol", type text}, {"Name", type text}, {"Secteur", type text}, {"SecteurCourt", type text}, {"ISIN", type text}, {"NombreTitres", type number}, {"PER", type number}, {"Dividende", type number}, {"BNPA", type number}, {"ChiffreAffaires", type number}, {"ResultatNet", type number}, {"ValorisationMFCFA", type number}, {"FlottantPct", type number}, {"Description", type text}, {"Dirigeants", type text}, {"Adresse", type text}, {"Telephone", type text}})
+				in
+				    Types
+
+	annotation PBI_ResultType = Table
+

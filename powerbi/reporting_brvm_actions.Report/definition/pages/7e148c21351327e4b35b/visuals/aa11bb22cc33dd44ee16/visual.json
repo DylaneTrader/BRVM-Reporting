@@ -1,0 +1,39 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "aa11bb22cc33dd44ee16",
+  "position": {
+    "x": 1045.3908355795147,
+    "y": 330.35040431266845,
+    "z": 13000,
+    "height": 91.428571428571431,
+    "width": 227.70889487870619,
+    "tabOrder": 13000
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
+                  "Property": "Volume FCFA Dernière Séance (M)"
+                }
+              },
+              "queryRef": "_Mesures.Volume FCFA Dernière Séance (M)",
+              "nativeQueryRef": "Volume FCFA Dernière Séance (M)",
+              "displayName": "Volume dernière séance (M FCFA)"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

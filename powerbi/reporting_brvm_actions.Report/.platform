@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "reporting_brvm_actions"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "17d9a5e9-6d0f-4e7e-ae72-671d0ef69282"
+  }
+}

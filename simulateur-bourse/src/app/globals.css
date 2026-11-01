@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html,
+body {
+  background-color: #0b0f17;
+  color: #e2e8f0;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-white/5 bg-base-800/70 backdrop-blur p-5 shadow-lg shadow-black/20;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-brand-600 hover:bg-brand-500 text-white;
+  }
+  .btn-ghost {
+    @apply btn bg-white/5 hover:bg-white/10 text-slate-200;
+  }
+  .btn-buy {
+    @apply btn bg-emerald-600 hover:bg-emerald-500 text-white;
+  }
+  .btn-sell {
+    @apply btn bg-rose-600 hover:bg-rose-500 text-white;
+  }
+  .input {
+    @apply w-full rounded-xl border border-white/10 bg-base-900 px-3 py-2 text-sm text-slate-100 outline-none focus:border-brand-500/70;
+  }
+  .label {
+    @apply text-xs uppercase tracking-wide text-slate-400;
+  }
+}
+
+/* Scrollbar discrète */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #243044;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}

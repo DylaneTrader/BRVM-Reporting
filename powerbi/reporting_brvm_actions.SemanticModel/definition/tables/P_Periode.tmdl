@@ -1,0 +1,70 @@
+table P_Periode
+	lineageTag: 301d8ac2-aefd-4dff-be18-21c61e2028b0
+
+	column Cle
+		dataType: string
+		lineageTag: c41b2bf4-fb15-4667-a2f0-dc96c461ed80
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Cle]
+
+	column Libelle
+		dataType: string
+		lineageTag: 15053c6e-c793-401a-8d7d-ba97a0db47c3
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Libelle]
+		sortByColumn: Ordre
+
+	column Jours
+		dataType: int64
+		formatString: 0
+		lineageTag: 225f45a9-c16c-4786-9816-2f7e8eb21b00
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Jours]
+
+	column Type
+		dataType: string
+		lineageTag: 4e45a5e3-52f7-4ee9-b3d9-5eb97ee40110
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Type]
+
+	column Ordre
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 03d6d0c8-fde8-45be-ba52-c6d804d86ebe
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Ordre]
+
+	partition P_Periode = calculated
+		mode: import
+		source =
+				DATATABLE(
+				    "Cle", STRING,
+				    "Libelle", STRING,
+				    "Jours", INTEGER,
+				    "Type", STRING,
+				    "Ordre", INTEGER,
+				    {
+				        {"1D", "1 Jour", 1, "glissante", 1},
+				        {"1W", "1 Semaine", 7, "glissante", 2},
+				        {"1M", "1 Mois", 30, "glissante", 3},
+				        {"3M", "3 Mois", 91, "glissante", 4},
+				        {"6M", "6 Mois", 182, "glissante", 5},
+				        {"1Y", "1 An", 365, "glissante", 6},
+				        {"3Y", "3 Ans", 1095, "glissante", 7},
+				        {"WTD", "Depuis lundi (WTD)", 0, "calendaire", 8},
+				        {"MTD", "Depuis début de mois (MTD)", 0, "calendaire", 9},
+				        {"QTD", "Depuis début de trimestre (QTD)", 0, "calendaire", 10},
+				        {"STD", "Depuis début de semestre (STD)", 0, "calendaire", 11},
+				        {"YTD", "Depuis le 1er janvier (YTD)", 0, "calendaire", 12},
+				        {"OTD", "Depuis l'origine (OTD)", 0, "calendaire", 13}
+				    }
+				)
+
+	annotation PBI_Id = PPeriodeBRVM
+

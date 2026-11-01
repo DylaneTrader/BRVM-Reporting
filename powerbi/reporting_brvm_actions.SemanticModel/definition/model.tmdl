@@ -1,0 +1,28 @@
+model Model
+	culture: fr-FR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: fr-CI
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_ProTooling = ["DevMode"]
+
+annotation PBI_QueryOrder = ["Cotations_Actions","Cotations_Indices","Dim_Action","Dim_Indice","Resume_Scraping","Actualites","_Mesures","Fondamentaux","Dividendes"]
+
+ref table Cotations_Actions
+ref table Cotations_Indices
+ref table Dim_Action
+ref table Dim_Indice
+ref table Dim_Date
+ref table P_Periode
+ref table Resume_Scraping
+ref table Actualites
+ref table _Mesures
+ref table Fondamentaux
+ref table Dividendes
+
+ref cultureInfo fr-FR
+

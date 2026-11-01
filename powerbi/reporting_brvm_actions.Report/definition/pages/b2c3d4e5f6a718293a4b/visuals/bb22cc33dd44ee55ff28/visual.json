@@ -1,0 +1,147 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "bb22cc33dd44ee55ff28",
+  "position": {
+    "x": 0,
+    "y": 516.66666666666663,
+    "z": 6000,
+    "height": 193.33333333333331,
+    "width": 603.33333333333337,
+    "tabOrder": 7000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dividendes"
+                    }
+                  },
+                  "Property": "Exercice"
+                }
+              },
+              "queryRef": "Dividendes.Exercice",
+              "nativeQueryRef": "Exercice"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dividendes"
+                    }
+                  },
+                  "Property": "Statut"
+                }
+              },
+              "queryRef": "Dividendes.Statut",
+              "nativeQueryRef": "Statut"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dividendes"
+                    }
+                  },
+                  "Property": "DateDetachement"
+                }
+              },
+              "queryRef": "Dividendes.DateDetachement",
+              "nativeQueryRef": "DateDetachement"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dividendes"
+                    }
+                  },
+                  "Property": "DatePaiement"
+                }
+              },
+              "queryRef": "Dividendes.DatePaiement",
+              "nativeQueryRef": "DatePaiement"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dividendes"
+                    }
+                  },
+                  "Property": "Rendement_Pct"
+                }
+              },
+              "queryRef": "Dividendes.Rendement_Pct",
+              "nativeQueryRef": "Rendement_Pct"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dividendes"
+                    }
+                  },
+                  "Property": "Montant_Net_FCFA"
+                }
+              },
+              "queryRef": "Dividendes.Montant_Net_FCFA",
+              "nativeQueryRef": "Montant_Net_FCFA"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "Dividendes"
+                  }
+                },
+                "Property": "Exercice"
+              }
+            },
+            "direction": "Descending"
+          }
+        ]
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Historique des dividendes'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

@@ -1,0 +1,83 @@
+table Fondamentaux
+	lineageTag: cdca1b74-7ede-43bc-abfb-6ccc6b249517
+
+	column Symbol
+		dataType: string
+		lineageTag: 257e0193-198c-433f-96e9-08972950b492
+		summarizeBy: none
+		sourceColumn: Symbol
+
+	column Indicateur
+		dataType: string
+		lineageTag: ef12653a-16a4-45e3-bd92-fc3349112236
+		summarizeBy: none
+		sourceColumn: Indicateur
+
+	column Annee
+		dataType: int64
+		formatString: 0
+		lineageTag: f1a0fc6d-7dea-402f-9462-bfbd9a67b972
+		summarizeBy: none
+		sourceColumn: Annee
+
+	column ValeurTexte
+		dataType: string
+		lineageTag: 8ebce598-461e-4209-8ff2-0ada8258124c
+		summarizeBy: none
+		sourceColumn: ValeurTexte
+
+	column Valeur
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 7a68d308-618f-4e78-82fa-2060df41508c
+		summarizeBy: none
+		sourceColumn: Valeur
+
+	column EstPourcentage
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 129d15d9-e88c-4c75-81ae-9a2746c5fd4e
+		summarizeBy: none
+		sourceColumn: EstPourcentage
+
+	partition Fondamentaux = m
+		mode: import
+		source =
+				let
+				    CheminDonnees = "c:\Users\DYLANE\OneDrive - CGF BOURSE\Bureau\MES MINI-APPS\BRVM app\data",
+				    NettoyerNombre = (t as nullable text) as nullable number =>
+				        let
+				            brut = if t = null then null else Text.Trim(t),
+				            sansUnites = if brut = null then null else Text.Replace(Text.Replace(brut, "%", ""), "×", ""),
+				            sansEspaces = if sansUnites = null then null else Text.Replace(Text.Replace(sansUnites, "#(00A0)", ""), " ", ""),
+				            resultat = if sansEspaces = null or sansEspaces = "" or sansEspaces = "N/A" or sansEspaces = "-" then null else try Number.FromText(Text.Replace(sansEspaces, ",", "."), "en-US") otherwise null
+				        in
+				            resultat,
+				    Source = Folder.Files(CheminDonnees & "\fondamentaux"),
+				    Fichiers = Table.SelectRows(Source, each Text.EndsWith([Name], "_fondamentaux.json")),
+				    AjoutRecord = Table.AddColumn(Fichiers, "R", each Json.Document([Content], 65001)),
+				    AjoutLignes = Table.AddColumn(AjoutRecord, "Rows", each
+				        let
+				            r = [R],
+				            ticker = Record.FieldOrDefault(r, "ticker", null),
+				            metrics = Record.FieldOrDefault(r, "metrics", [x = null]),
+				            noms = Record.FieldNames(metrics),
+				            lignes = List.Combine(List.Transform(noms, (m) =>
+				                let
+				                    vals = Record.Field(metrics, m),
+				                    annees = if vals is record then Record.FieldNames(vals) else {}
+				                in
+				                    List.Transform(annees, (a) => [Symbol = ticker, Indicateur = m, Annee = a, ValeurTexte = Text.From(Record.Field(vals, a))])))
+				        in
+				            lignes),
+				    Selection = Table.SelectColumns(AjoutLignes, {"Rows"}),
+				    ExpansionListe = Table.ExpandListColumn(Selection, "Rows"),
+				    ExpansionRecords = Table.ExpandRecordColumn(ExpansionListe, "Rows", {"Symbol", "Indicateur", "Annee", "ValeurTexte"}),
+				    AjoutValeur = Table.AddColumn(ExpansionRecords, "Valeur", each NettoyerNombre([ValeurTexte]), type number),
+				    AjoutPct = Table.AddColumn(AjoutValeur, "EstPourcentage", each [ValeurTexte] <> null and Text.Contains([ValeurTexte], "%"), type logical),
+				    Types = Table.TransformColumnTypes(AjoutPct, {{"Symbol", type text}, {"Indicateur", type text}, {"Annee", Int64.Type}, {"ValeurTexte", type text}})
+				in
+				    Types
+
+	annotation PBI_ResultType = Table
+

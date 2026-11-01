@@ -1,0 +1,99 @@
+table Dividendes
+	lineageTag: 469d5cfb-38e2-448d-af74-145ea5fcd61e
+
+	column Date_Scraping
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: 7ebe89ad-d0ac-42b5-8a93-46ea81e9ef05
+		summarizeBy: none
+		sourceColumn: Date_Scraping
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Ticker
+		dataType: string
+		lineageTag: e19b785d-77b8-4613-acdb-188716d88653
+		summarizeBy: none
+		sourceColumn: Ticker
+
+	column Nom_Canonique
+		dataType: string
+		lineageTag: 6ec87cae-3844-4b2c-b30d-0d3dca4d4f30
+		summarizeBy: none
+		sourceColumn: Nom_Canonique
+
+	column Exercice
+		dataType: string
+		lineageTag: 03d023df-f9dd-46c6-a99a-d84ed3d8db87
+		summarizeBy: none
+		sourceColumn: Exercice
+
+	column Statut
+		dataType: string
+		lineageTag: 5392edeb-f6cf-4613-b712-3ae46a488c86
+		summarizeBy: none
+		sourceColumn: Statut
+
+	column DateDetachement
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: 87947c7d-1b94-4524-bf18-fff52931463d
+		summarizeBy: none
+		sourceColumn: DateDetachement
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column DatePaiement
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: f6c938fe-12d9-480b-b458-c33f3224a767
+		summarizeBy: none
+		sourceColumn: DatePaiement
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Montant_Net_FCFA
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 0edefe6b-51b7-4099-9b93-0f6050b37d19
+		summarizeBy: none
+		sourceColumn: Montant_Net_FCFA
+
+	column Rendement_Pct
+		dataType: double
+		formatString: 0.00
+		lineageTag: ef8a029e-344c-42e3-8f05-163140c76efa
+		summarizeBy: none
+		sourceColumn: Rendement_Pct
+
+	column Avis_URL
+		dataType: string
+		lineageTag: 094ae247-8c65-40d2-ae92-aa6fd14836ba
+		dataCategory: WebUrl
+		summarizeBy: none
+		sourceColumn: Avis_URL
+
+	column Sources
+		dataType: string
+		lineageTag: 2c1c422a-86ad-4cda-95bc-55a5c6d41adf
+		summarizeBy: none
+		sourceColumn: Sources
+
+	partition Dividendes = m
+		mode: import
+		source =
+				let
+				    CheminDonnees = "c:\Users\DYLANE\OneDrive - CGF BOURSE\Bureau\MES MINI-APPS\BRVM app\data",
+				    Source = Csv.Document(File.Contents(CheminDonnees & "\dividendes\dividendes.csv"), [Delimiter = ";", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    EnTetes = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    DateScrap = Table.TransformColumnTypes(EnTetes, {{"Date_Scraping", type date}}, "en-US"),
+				    AjoutDetachement = Table.AddColumn(DateScrap, "DateDetachement", each try Date.From([Date_Detachement], "en-US") otherwise null, type date),
+				    AjoutPaiement = Table.AddColumn(AjoutDetachement, "DatePaiement", each try Date.From([Date_Paiement], "en-US") otherwise null, type date),
+				    TypesNombres = Table.TransformColumnTypes(AjoutPaiement, {{"Montant_Net_FCFA", type number}, {"Rendement_Pct", type number}}, "fr-FR"),
+				    TypesTexte = Table.TransformColumnTypes(TypesNombres, {{"Ticker", type text}, {"Nom_Canonique", type text}, {"Exercice", type text}, {"Statut", type text}, {"Avis_URL", type text}, {"Sources", type text}}),
+				    Selection = Table.SelectColumns(TypesTexte, {"Date_Scraping", "Ticker", "Nom_Canonique", "Exercice", "Statut", "DateDetachement", "DatePaiement", "Montant_Net_FCFA", "Rendement_Pct", "Avis_URL", "Sources"})
+				in
+				    Selection
+
+	annotation PBI_ResultType = Table
+

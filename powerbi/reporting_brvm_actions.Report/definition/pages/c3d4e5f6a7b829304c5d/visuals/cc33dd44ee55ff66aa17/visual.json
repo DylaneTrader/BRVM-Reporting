@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "cc33dd44ee55ff66aa17",
+  "position": {
+    "x": 996,
+    "y": 136,
+    "z": 207,
+    "width": 138,
+    "height": 84
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
+                  "Property": "Rendement Dividende"
+                }
+              },
+              "queryRef": "_Mesures.Rendement Dividende",
+              "nativeQueryRef": "Rendement Dividende",
+              "displayName": "Rendement dividende"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

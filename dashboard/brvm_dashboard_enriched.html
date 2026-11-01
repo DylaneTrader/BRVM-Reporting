@@ -1,0 +1,2529 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BRVM Dashboard + Prophet Signals</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff;
+    --bg-sec: #f5f5f3;
+    --bg-ter: #eeede9;
+    --text: #1a1a18;
+    --text-sec: #6b6b67;
+    --border: rgba(0,0,0,0.1);
+    --border-med: rgba(0,0,0,0.18);
+    --blue: #185FA5;
+    --blue-bg: rgba(24,95,165,0.07);
+    --green: #1D9E75;
+    --green-bg: rgba(29,158,117,0.07);
+    --up: #0F6E56;
+    --down: #993C1D;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a18;
+      --bg-sec: #242420;
+      --bg-ter: #2e2e2a;
+      --text: #f0efe9;
+      --text-sec: #8a8a84;
+      --border: rgba(255,255,255,0.08);
+      --border-med: rgba(255,255,255,0.14);
+      --blue-bg: rgba(24,95,165,0.12);
+      --green-bg: rgba(29,158,117,0.1);
+      --up: #5DCAA5;
+      --down: #F0997B;
+    }
+  }
+  body { font-family: 'Georgia', 'Times New Roman', serif; background: var(--bg-ter); color: var(--text); min-height: 100vh; }
+  .app { max-width: 1600px; margin: 0 auto; padding: 1.5rem 2rem; width: 100%; }
+  @media (max-width: 768px) { .app { padding: 1rem; } }
+
+  /* Header */
+  header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 2rem; border-bottom: 0.5px solid var(--border-med); padding-bottom: 1rem; }
+  header h1 { font-size: 22px; font-weight: 400; letter-spacing: -0.02em; color: var(--text); }
+  header h1 strong { font-weight: 700; }
+  #status-badge { font-family: 'Courier New', monospace; font-size: 11px; padding: 4px 10px; border-radius: 4px; border: 0.5px solid; }
+  .badge-ok { background: #EAF3DE; color: #3B6D11; border-color: #97C459 !important; }
+  .badge-load { background: #E6F1FB; color: #185FA5; border-color: #85B7EB !important; }
+  @media (prefers-color-scheme: dark) {
+    .badge-ok { background: #27500A; color: #C0DD97; border-color: #639922 !important; }
+    .badge-load { background: #0C447C; color: #B5D4F4; border-color: #378ADD !important; }
+  }
+
+  /* Tabs */
+  nav.tabs { display: flex; gap: 0; margin-bottom: 1.75rem; border-bottom: 0.5px solid var(--border); overflow-x: auto; }
+  nav.tabs button { padding: 10px 18px; font-size: 13px; font-family: inherit; cursor: pointer; border: none; background: none; color: var(--text-sec); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; letter-spacing: 0.01em; transition: color .15s; }
+  nav.tabs button.active { color: var(--text); border-bottom-color: var(--blue); font-weight: 600; }
+  nav.tabs button:hover:not(.active) { color: var(--text); }
+
+  /* Panels */
+  .panel { display: none; } .panel.active { display: block; }
+
+  /* Controls */
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 1.5rem; }
+  select { padding: 8px 12px; font-size: 13px; font-family: inherit; border: 0.5px solid var(--border-med); border-radius: var(--radius); background: var(--bg); color: var(--text); cursor: pointer; }
+  select:focus { outline: none; border-color: var(--blue); }
+  .period-btns { display: flex; gap: 3px; }
+  .pbtn { padding: 6px 11px; font-size: 12px; font-family: inherit; border: 0.5px solid var(--border-med); border-radius: 6px; background: none; cursor: pointer; color: var(--text-sec); transition: all .12s; }
+  .pbtn.active { background: var(--bg-sec); color: var(--text); font-weight: 600; border-color: var(--border-med); }
+  .pbtn:hover:not(.active) { background: var(--bg-sec); }
+
+  /* Metrics */
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .metric { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .metric .lbl { font-size: 11px; color: var(--text-sec); font-family: 'Courier New', monospace; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 6px; }
+  .metric .val { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+  .metric .sub { font-size: 11px; margin-top: 3px; color: var(--text-sec); }
+  .up { color: var(--up); } .down { color: var(--down); }
+
+  /* Charts */
+  .chart-wrap { position: relative; width: 100%; height: 420px; margin-bottom: 1.75rem; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem; }
+  @media (max-width: 768px) { .chart-wrap { height: 280px; } }
+
+  /* Index cards */
+  .indices-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .idx-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem; cursor: pointer; transition: border-color .15s; }
+  .idx-card:hover, .idx-card.selected { border-color: var(--blue); }
+  .idx-card .iname { font-size: 11px; color: var(--text-sec); font-family: 'Courier New', monospace; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  .idx-card .iprice { font-size: 19px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+  .idx-card .ivar { font-size: 12px; margin-top: 3px; }
+
+  /* Info cards */
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .info-grid-3 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 1rem; }
+  @media (max-width: 900px) { .info-grid-3 { grid-template-columns: 1fr; } }
+  @media (max-width: 540px) { .info-grid { grid-template-columns: 1fr; } }
+  /* Algo input */
+  .algo-input-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--border); }
+  .algo-input-row label { font-size: 12px; color: var(--text-sec); font-family: 'Courier New', monospace; text-transform: uppercase; letter-spacing: .04em; }
+  .algo-input-row input { padding: 8px 12px; font-size: 14px; font-family: inherit; border: 0.5px solid var(--border-med); border-radius: var(--radius); background: var(--bg); color: var(--text); width: 180px; font-weight: 700; }
+  .algo-input-row input:focus { outline: none; border-color: var(--blue); }
+  .algo-input-row .hint { font-size: 11px; color: var(--text-sec); font-style: italic; }
+  .algo-input-row .preset { padding: 6px 10px; font-size: 11px; font-family: 'Courier New', monospace; border: 0.5px solid var(--border-med); border-radius: 6px; background: var(--bg); cursor: pointer; color: var(--text-sec); }
+  .algo-input-row .preset:hover { background: var(--bg-sec); color: var(--text); }
+  .info-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.1rem 1.25rem; }
+  .info-card h3 { font-size: 10px; font-weight: 700; color: var(--text-sec); font-family: 'Courier New', monospace; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+  .kv { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+  .kv:last-child { border-bottom: none; }
+  .kv .k { color: var(--text-sec); font-size: 12px; }
+  .kv .v { font-weight: 600; color: var(--text); text-align: right; max-width: 60%; }
+  .conseil-box { background: var(--bg-sec); border-radius: var(--radius); padding: 12px; font-size: 13px; color: var(--text-sec); line-height: 1.65; margin-top: 10px; border-left: 3px solid var(--blue); }
+  .conseil-warn { font-size: 11px; color: var(--text-sec); margin-top: 8px; font-style: italic; opacity: 0.7; }
+
+  /* Fondamentaux */
+  .fond-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .fond-table th { text-align: left; padding: 7px 10px; font-size: 11px; font-weight: 700; color: var(--text-sec); font-family: 'Courier New', monospace; text-transform: uppercase; letter-spacing: .04em; border-bottom: 0.5px solid var(--border-med); }
+  .fond-table td { padding: 7px 10px; border-bottom: 0.5px solid var(--border); color: var(--text); }
+  .fond-table tr:last-child td { border-bottom: none; }
+  .fond-table tr:hover td { background: var(--bg-sec); }
+  .pos { color: var(--up); font-weight: 600; } .neg { color: var(--down); font-weight: 600; }
+
+  /* Signals Table */
+  .sig-table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--bg); border-radius: var(--radius-lg); overflow: hidden; border: 0.5px solid var(--border); }
+  .sig-table th { text-align: left; padding: 12px; font-size: 11px; font-weight: 700; color: var(--text-sec); font-family: 'Courier New', monospace; text-transform: uppercase; border-bottom: 0.5px solid var(--border-med); background: var(--bg-sec); }
+  .sig-table td { padding: 12px; border-bottom: 0.5px solid var(--border); color: var(--text); }
+  .sig-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .sig-achat-fort { background: #EAF3DE; color: #3B6D11; }
+  .sig-achat { background: #F0F9FF; color: #0369A1; }
+  .sig-vente { background: #FEF2F2; color: #991B1B; }
+  .sig-vente-fort { background: #7F1D1D; color: #FFFFFF; }
+  .sig-neutre { background: #F3F4F6; color: #374151; }
+
+  /* Signal history heatmap */
+  .hm-wrap { overflow-x: auto; border: 0.5px solid var(--border); border-radius: var(--radius-lg); background: var(--bg); }
+  .hm-table { border-collapse: collapse; font-size: 11px; min-width: 100%; }
+  .hm-table th { padding: 7px 8px; font-size: 10px; font-weight: 700; color: var(--text-sec); font-family: 'Courier New', monospace; text-transform: uppercase; border-bottom: 0.5px solid var(--border-med); background: var(--bg-sec); white-space: nowrap; }
+  .hm-table th.hm-tk { text-align: left; position: sticky; left: 0; z-index: 2; }
+  .hm-table th.hm-dt { text-align: center; }
+  .hm-table td { padding: 0; border-bottom: 0.5px solid var(--border); border-right: 0.5px solid var(--border); }
+  .hm-table td.hm-tk { padding: 6px 10px; font-weight: 700; color: var(--text); white-space: nowrap; position: sticky; left: 0; background: var(--bg); z-index: 1; cursor: pointer; }
+  .hm-table td.hm-tk:hover { color: var(--blue); }
+  .hm-table tr.hm-active td.hm-tk { color: var(--blue); }
+  .hm-cell { width: 30px; height: 28px; display: block; }
+  .hm-cell[title] { cursor: default; }
+  .hm-af { background: #3B6D11; }
+  .hm-a  { background: #5FA8D3; }
+  .hm-n  { background: #D8DADE; }
+  .hm-v  { background: #C44A48; }
+  .hm-vf { background: #7F1D1D; }
+  .hm-empty { background: transparent; }
+
+  /* Misc */
+  .loading { text-align: center; padding: 2.5rem; color: var(--text-sec); font-size: 14px; }
+  .err-box { color: #A32D2D; font-size: 13px; padding: 12px 16px; background: #FCEBEB; border-radius: var(--radius); border-left: 3px solid #E24B4A; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border-med); border-top-color: var(--blue); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--text-sec); margin-bottom: 10px; font-family: 'Courier New', monospace; }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .societe-header { margin-bottom: 1.25rem; }
+  .societe-header .snom { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
+  .societe-header .ssub { font-size: 13px; color: var(--text-sec); margin-top: 3px; font-family: 'Courier New', monospace; }
+
+  /* ── Verdict / score composite ─────────────────────────────────────────── */
+  .verdict-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem 1.4rem; margin-bottom: 1.25rem; }
+  .verdict-main { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+  .verdict-badge { padding: 5px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; font-family: 'Courier New', monospace; text-transform: uppercase; letter-spacing: .04em; }
+  .verdict-achat-fort  { background: #EAF3DE; color: #3B6D11; }
+  .verdict-achat       { background: #E6F1FB; color: #185FA5; }
+  .verdict-surveiller  { background: #FFF7ED; color: #9A3412; }
+  .verdict-conserver   { background: #F3F4F6; color: #374151; }
+  .verdict-reduire     { background: #FEF3C7; color: #92400E; }
+  .verdict-vendre      { background: #FEF2F2; color: #991B1B; }
+  @media (prefers-color-scheme: dark) {
+    .verdict-achat-fort  { background: #27500A; color: #C0DD97; }
+    .verdict-achat       { background: #0C447C; color: #B5D4F4; }
+    .verdict-surveiller  { background: #431407; color: #FDBA74; }
+    .verdict-conserver   { background: #1F2937; color: #9CA3AF; }
+    .verdict-reduire     { background: #451A03; color: #FCD34D; }
+    .verdict-vendre      { background: #450A0A; color: #FCA5A5; }
+  }
+  .verdict-score { font-size: 13px; color: var(--text-sec); font-family: 'Courier New', monospace; }
+  .score-bar-track { position: relative; height: 8px; background: var(--bg-ter); border-radius: 4px; overflow: visible; margin-bottom: 12px; }
+  .score-bar-fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
+  .score-bar-zero { position: absolute; top: -2px; bottom: -2px; width: 2px; left: 50%; background: var(--border-med); border-radius: 1px; }
+  .tech-indicators { display: flex; flex-wrap: wrap; gap: 7px; }
+  .tech-chip { display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 6px; font-size: 12px; border: 0.5px solid var(--border); background: var(--bg-sec); }
+  .tech-chip .chip-score { font-weight: 700; font-family: 'Courier New', monospace; font-size: 13px; min-width: 24px; }
+  .tech-chip.up  { border-color: rgba(29,158,117,0.35); background: rgba(29,158,117,0.07); }
+  .tech-chip.down{ border-color: rgba(153,60,29,0.35);  background: rgba(153,60,29,0.07);  }
+  .tech-chip.up   .chip-score { color: var(--up); }
+  .tech-chip.down .chip-score { color: var(--down); }
+  .chart-wrap-sm { position: relative; width: 100%; height: 150px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: .6rem; margin-top: .5rem; }
+
+  /* ── Screening table ───────────────────────────────────────────────────── */
+  .screen-table { width: 100%; border-collapse: collapse; font-size: 12.5px; background: var(--bg); border-radius: var(--radius-lg); overflow: hidden; border: 0.5px solid var(--border); }
+  .screen-table th { text-align: left; padding: 10px 12px; font-size: 10px; font-weight: 700; color: var(--text-sec); font-family: 'Courier New', monospace; text-transform: uppercase; border-bottom: 0.5px solid var(--border-med); background: var(--bg-sec); white-space: nowrap; }
+  .screen-table td { padding: 9px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+  .screen-table tr:hover td { background: var(--bg-sec); }
+  .screen-table tr { cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1><strong>BRVM</strong> Dashboard</h1>
+    <span id="status-badge" class="badge-load"><span class="spinner"></span>Chargement...</span>
+  </header>
+
+  <nav class="tabs">
+    <button onclick="showTab('algo',this)"><i class="ti ti-binary" style="margin-right:5px;font-size:14px;vertical-align:-2px"></i>Portefeuille Algo</button>
+    <button onclick="showTab('backtest',this)"><i class="ti ti-history" style="margin-right:5px;font-size:14px;vertical-align:-2px"></i>Backtest</button>
+    <button class="active" onclick="showTab('actions',this)"><i class="ti ti-chart-line" style="margin-right:5px;font-size:14px;vertical-align:-2px"></i>Actions</button>
+    <button onclick="showTab('indices',this)"><i class="ti ti-trending-up" style="margin-right:5px;font-size:14px;vertical-align:-2px"></i>Indices</button>
+    <button onclick="showTab('signals',this)"><i class="ti ti-robot" style="margin-right:5px;font-size:14px;vertical-align:-2px"></i>Signaux Prophet</button>
+    <button onclick="showTab('sighist',this)"><i class="ti ti-timeline" style="margin-right:5px;font-size:14px;vertical-align:-2px"></i>Historique signaux</button>
+    <button onclick="showTab('societe',this)"><i class="ti ti-building" style="margin-right:5px;font-size:14px;vertical-align:-2px"></i>Fiche société</button>
+    <button onclick="showTab('fondamentaux',this)"><i class="ti ti-report" style="margin-right:5px;font-size:14px;vertical-align:-2px"></i>Fondamentaux</button>
+    <button onclick="showTab('analyse',this)"><i class="ti ti-adjustments-horizontal" style="margin-right:5px;font-size:14px;vertical-align:-2px"></i>Analyse & Screening</button>
+  </nav>
+
+  <!-- ACTIONS -->
+  <div id="panel-actions" class="panel active">
+    <div class="controls">
+      <select id="sel-action" onchange="loadAction()"></select>
+      <div class="period-btns">
+        <button class="pbtn active" onclick="setPeriod(this,30)">1M</button>
+        <button class="pbtn" onclick="setPeriod(this,90)">3M</button>
+        <button class="pbtn" onclick="setPeriod(this,180)">6M</button>
+        <button class="pbtn" onclick="setPeriod(this,365)">1A</button>
+        <button class="pbtn" onclick="setPeriod(this,0)">Max</button>
+      </div>
+    </div>
+    <div id="action-metrics" class="metrics"><div class="loading"><span class="spinner"></span>Chargement...</div></div>
+    <div class="chart-wrap"><canvas id="chart-action" role="img" aria-label="Cours historique de l'action sélectionnée"></canvas></div>
+  </div>
+
+  <!-- INDICES -->
+  <div id="panel-indices" class="panel">
+    <div id="indices-cards" class="indices-grid"><div class="loading"><span class="spinner"></span>Chargement des indices...</div></div>
+    <div class="chart-wrap"><canvas id="chart-indice" role="img" aria-label="Cours historique de l'indice sélectionné"></canvas></div>
+  </div>
+
+  <!-- SIGNALS -->
+  <div id="panel-signals" class="panel">
+    <div class="info-card" style="margin-bottom:1.5rem">
+      <h3>Intelligence Artificielle Prophet</h3>
+      <p style="font-size:13px;color:var(--text-sec);line-height:1.6">
+        Les signaux ci-dessous sont générés automatiquement par le modèle de prévision <strong>Facebook Prophet</strong>. 
+        Le modèle analyse les tendances historiques et la saisonnalité pour estimer les prix futurs à 30 jours.
+      </p>
+    </div>
+    <div id="signals-content">
+      <div class="loading"><span class="spinner"></span>Analyse des marchés en cours...</div>
+    </div>
+  </div>
+
+  <!-- HISTORIQUE SIGNAUX -->
+  <div id="panel-sighist" class="panel">
+    <div class="info-card" style="margin-bottom:1.5rem">
+      <h3>Historique des signaux du portefeuille</h3>
+      <p style="font-size:13px;color:var(--text-sec);line-height:1.6">
+        Évolution dans le temps du signal Prophet (horizon 30j) pour chaque actif détenu.
+        Chaque colonne est un instantané recalculé à une date passée (fenêtre glissante 3 ans).
+        Le <strong>heatmap</strong> donne la vue d'ensemble ; sélectionnez un actif pour le détail
+        prix vs cible.
+      </p>
+      <div class="legend" style="margin-top:10px">
+        <span><i style="background:#3B6D11"></i>Achat fort</span>
+        <span><i style="background:#0369A1"></i>Achat</span>
+        <span><i style="background:#9CA3AF"></i>Neutre</span>
+        <span><i style="background:#991B1B"></i>Vente</span>
+        <span><i style="background:#7F1D1D"></i>Vente forte</span>
+      </div>
+    </div>
+    <div id="sighist-content">
+      <div class="loading"><span class="spinner"></span>Chargement de l'historique…</div>
+    </div>
+  </div>
+
+  <!-- SOCIÉTÉ -->
+  <div id="panel-societe" class="panel">
+    <div class="controls"><select id="sel-societe" onchange="loadSociete()"></select></div>
+    <div id="societe-content"><div class="loading"><span class="spinner"></span>Sélectionner une société</div></div>
+  </div>
+
+  <!-- FONDAMENTAUX -->
+  <div id="panel-fondamentaux" class="panel">
+    <div class="controls"><select id="sel-fond" onchange="loadFondamentaux()"></select></div>
+    <div id="fond-content"><div class="loading"><span class="spinner"></span>Sélectionner une société</div></div>
+  </div>
+
+  <!-- ALGO -->
+  <div id="panel-algo" class="panel">
+    <div class="info-card" style="margin-bottom:1.5rem">
+      <h3>Allocation Black-Litterman + Prophet</h3>
+      <p style="font-size:13px;color:var(--text-sec);line-height:1.6">
+        Allocation théorique calculée par Black-Litterman avec les vues Prophet (horizon 30j).
+        Contraintes : max 25% par actif, pas de short-selling, filtre liquidité J+2.
+        <strong>Note :</strong> les poids théoriques sont convertis en <em>nombre d'actions entier</em> en tenant compte du dernier prix de marché et des frais de courtage. Le résidu non investissable va en cash.
+      </p>
+      <div class="algo-input-row">
+        <label for="algo-capital">Capital</label>
+        <input type="number" id="algo-capital" value="1000000" min="0" step="10000" oninput="loadAlgo()"/>
+        <span style="font-weight:700;color:var(--text)">FCFA</span>
+        <button class="preset" onclick="setCapital(500000)">500K</button>
+        <button class="preset" onclick="setCapital(1000000)">1M</button>
+        <button class="preset" onclick="setCapital(5000000)">5M</button>
+        <button class="preset" onclick="setCapital(10000000)">10M</button>
+      </div>
+      <div class="algo-input-row">
+        <label for="algo-fees">Frais courtage</label>
+        <input type="number" id="algo-fees" value="1.0" min="0" max="10" step="0.1" style="width:90px" oninput="loadAlgo()"/>
+        <span style="font-weight:700;color:var(--text)">%</span>
+        <label for="algo-startdate" style="margin-left:18px">Date d'achat (suivi)</label>
+        <input type="date" id="algo-startdate" style="width:170px" onchange="loadAlgo()"/>
+        <span class="hint">Définit la date à partir de laquelle on calcule l'évolution du portefeuille.</span>
+      </div>
+    </div>
+
+    <!-- Métadonnées -->
+    <div class="info-card" style="margin-bottom:1.5rem">
+      <h3>Métadonnées de l'allocation</h3>
+      <div id="algo-meta" class="metrics" style="margin-bottom:0"></div>
+    </div>
+
+    <div class="info-grid-3">
+        <div class="info-card">
+            <h3>Allocation réalisable (nombre d'actions × prix)</h3>
+            <div id="algo-weights-table" style="overflow-x:auto"></div>
+            <div id="algo-summary" style="margin-top:14px"></div>
+        </div>
+        <div class="info-card">
+            <h3>Répartition (montant réellement investi)</h3>
+            <div class="chart-wrap" style="height:340px;margin-bottom:0;border:none;padding:0"><canvas id="chart-algo-pie"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Évolution P&L -->
+    <div class="info-card" style="margin-top:1.5rem">
+      <h3>Évolution du portefeuille vs Buy &amp; Hold vs BRVM Composite</h3>
+      <div class="legend">
+        <span><i style="background:#185FA5"></i>Portefeuille Algo (rebalancé)</span>
+        <span><i style="background:#F59E0B"></i>Buy &amp; Hold (allocation figée à J0)</span>
+        <span><i style="background:#1D9E75"></i>BRVM Composite</span>
+        <span><i style="background:transparent;border-top:2px dashed #888;height:0"></i>Capital initial</span>
+      </div>
+      <div id="algo-pnl-metrics" class="metrics" style="margin-bottom:1rem"></div>
+      <div class="chart-wrap" style="height:420px"><canvas id="chart-algo-pnl"></canvas></div>
+      <p class="conseil-warn" style="margin-top:6px">
+        Les 3 courbes sont calibrées au même capital initial à la date d'achat. Le portefeuille Algo intègre les dividendes encaissés. Le Buy &amp; Hold reprend l'allocation actuelle figée à J0 (pas de rebalancement). BRVMC est mis à l'échelle pour comparaison.
+      </p>
+    </div>
+
+    <!-- Plan d'action vs portefeuille actuel -->
+    <div class="info-card" style="margin-top:1.5rem">
+      <h3>Plan d'action : signaux Prophet × allocation cible</h3>
+      <p style="font-size:12.5px;color:var(--text-sec);line-height:1.6;margin-bottom:10px">
+        Comparaison entre votre portefeuille réel actuel et l'allocation cible. La colonne <em>Action</em> indique mécaniquement quoi faire ; le signal Prophet est juxtaposé pour détecter les conflits (ex : BL maintient une position mais Prophet signale VENTE FORTE).
+      </p>
+      <div class="algo-input-row" style="border-top:none;padding-top:0">
+        <span class="hint">Saisissez le nombre d'actions actuellement détenues. Par défaut = allocation calculée ci-dessus.</span>
+        <button class="preset" onclick="resetHoldingsToTarget()">Réinitialiser au cible</button>
+        <button class="preset" onclick="clearHoldings()">Vider (portefeuille neuf)</button>
+      </div>
+      <div id="algo-action-plan" style="overflow-x:auto;margin-top:10px"></div>
+    </div>
+
+    <!-- Simulateur de rebalancement (J vs J+2) -->
+    <div class="info-card" style="margin-top:1.5rem">
+      <h3>Simulateur de rebalancement — Exécution idéale vs cycle BRVM (J+2)</h3>
+      <p style="font-size:12.5px;color:var(--text-sec);line-height:1.6;margin-bottom:10px">
+        À la BRVM, le cash issu d'une vente n'est disponible qu'au règlement-livraison (J+2 pour les actions liquides). Cette simulation compare deux scénarios :
+        <strong>Idéal</strong> = tout exécuté à J au prix de J. <strong>Cycle réel</strong> = ventes à J, achats à J+2 au prix de J+2 (slippage observé).
+      </p>
+      <div class="algo-input-row" style="border-top:none;padding-top:0">
+        <label for="rebal-date">Date du rebalancement (J)</label>
+        <input type="date" id="rebal-date" style="width:170px" onchange="loadAlgo()"/>
+        <span class="hint">Par défaut = date d'achat ci-dessus. Doit être ≤ aujourd'hui pour observer J+2 réel.</span>
+      </div>
+      <div id="algo-rebal-sim" style="margin-top:10px"></div>
+    </div>
+
+    <!-- Dividendes à venir -->
+    <div class="info-card" style="margin-top:1.5rem">
+      <h3>Dividendes attendus sur ce portefeuille</h3>
+      <div id="algo-dividendes"></div>
+    </div>
+  </div>
+
+  <!-- ANALYSE & SCREENING -->
+  <div id="panel-analyse" class="panel">
+    <div class="info-card" style="margin-bottom:1.5rem">
+      <h3>Score composite par actif — RSI · MACD · Tendance · Liquidité · Prophet · PER</h3>
+      <p style="font-size:13px;color:var(--text-sec);line-height:1.6">
+        Chaque actif est noté de <strong>−12 à +12</strong> sur 6 dimensions. Cliquez sur un actif pour ouvrir l'analyse détaillée dans l'onglet Fondamentaux.
+      </p>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="preset" onclick="loadAnalyse('portfolio')">Portefeuille algo</button>
+        <button class="preset" onclick="loadAnalyse('all')">Tous les actifs BRVM</button>
+      </div>
+    </div>
+    <div id="analyse-content"><div class="loading"><span class="spinner"></span>Cliquez sur un bouton pour lancer l'analyse…</div></div>
+  </div>
+
+  <!-- BACKTEST -->
+  <div id="panel-backtest" class="panel">
+
+    <!-- ── Configuration ─────────────────────────────────────────────── -->
+    <div class="info-card" style="margin-bottom:1.25rem">
+      <h3>Paramètres généraux</h3>
+      <div style="display:flex;gap:1.25rem;flex-wrap:wrap;margin-top:10px;align-items:flex-end">
+        <div>
+          <div class="lbl" style="font-size:11px;color:var(--text-sec);font-family:'Courier New',monospace;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Capital initial (FCFA)</div>
+          <input type="number" id="bt-capital" value="1000000" min="0" step="100000" style="width:160px;padding:8px 10px;font-size:14px;font-weight:700;font-family:inherit;border:0.5px solid var(--border-med);border-radius:var(--radius);background:var(--bg);color:var(--text)"/>
+        </div>
+        <div>
+          <div class="lbl" style="font-size:11px;color:var(--text-sec);font-family:'Courier New',monospace;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Frais courtage (%)</div>
+          <input type="number" id="bt-fees" value="1.0" min="0" max="10" step="0.1" style="width:90px;padding:8px 10px;font-size:14px;font-weight:700;font-family:inherit;border:0.5px solid var(--border-med);border-radius:var(--radius);background:var(--bg);color:var(--text)"/>
+        </div>
+        <div>
+          <div class="lbl" style="font-size:11px;color:var(--text-sec);font-family:'Courier New',monospace;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Durée (années)</div>
+          <input type="number" id="bt-years" value="10" min="1" max="20" style="width:80px;padding:8px 10px;font-size:14px;font-weight:700;font-family:inherit;border:0.5px solid var(--border-med);border-radius:var(--radius);background:var(--bg);color:var(--text)"/>
+        </div>
+        <div>
+          <div class="lbl" style="font-size:11px;color:var(--text-sec);font-family:'Courier New',monospace;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Fréquence de revue</div>
+          <select id="bt-freq" style="padding:8px 10px;font-size:13px;font-family:inherit;border:0.5px solid var(--border-med);border-radius:var(--radius);background:var(--bg);color:var(--text)">
+            <option value="1">Mensuelle</option>
+            <option value="3">Trimestrielle</option>
+            <option value="6">Semestrielle</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Règles par signal ──────────────────────────────────────────── -->
+    <div class="info-card" style="margin-bottom:1.25rem">
+      <h3>Règles d'exécution par signal</h3>
+      <p style="font-size:12px;color:var(--text-sec);margin-top:4px;margin-bottom:12px">Budget actif = Capital ÷ Nb actifs (équipondéré). Les achats arrachent au minimum 1 action (arrondi au supérieur ↑).</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">
+        <div style="padding:12px;border-radius:var(--radius);background:rgba(59,109,17,0.07);border:0.5px solid rgba(59,109,17,0.25)">
+          <div style="font-size:11px;font-weight:700;color:#3B6D11;font-family:'Courier New',monospace;text-transform:uppercase;margin-bottom:8px">● ACHAT FORT</div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:13px">
+            Acheter <input type="number" id="bt-pct-af" value="100" min="0" max="200" step="5" style="width:62px;padding:4px 6px;font-size:13px;font-weight:700;border:0.5px solid var(--border-med);border-radius:4px;background:var(--bg);color:var(--text)"/>% du budget actif
+          </div>
+        </div>
+        <div style="padding:12px;border-radius:var(--radius);background:rgba(24,95,165,0.07);border:0.5px solid rgba(24,95,165,0.25)">
+          <div style="font-size:11px;font-weight:700;color:#185FA5;font-family:'Courier New',monospace;text-transform:uppercase;margin-bottom:8px">● ACHAT</div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:13px">
+            Acheter <input type="number" id="bt-pct-a" value="50" min="0" max="200" step="5" style="width:62px;padding:4px 6px;font-size:13px;font-weight:700;border:0.5px solid var(--border-med);border-radius:4px;background:var(--bg);color:var(--text)"/>% du budget actif
+          </div>
+        </div>
+        <div style="padding:12px;border-radius:var(--radius);background:var(--bg-sec);border:0.5px solid var(--border)">
+          <div style="font-size:11px;font-weight:700;color:var(--text-sec);font-family:'Courier New',monospace;text-transform:uppercase;margin-bottom:8px">● NEUTRE</div>
+          <div style="font-size:13px;color:var(--text-sec)">Conserver la position — aucune action</div>
+        </div>
+        <div style="padding:12px;border-radius:var(--radius);background:rgba(196,74,72,0.07);border:0.5px solid rgba(196,74,72,0.25)">
+          <div style="font-size:11px;font-weight:700;color:#C44A48;font-family:'Courier New',monospace;text-transform:uppercase;margin-bottom:8px">● VENTE</div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:13px">
+            Vendre <input type="number" id="bt-pct-v" value="50" min="0" max="100" step="5" style="width:62px;padding:4px 6px;font-size:13px;font-weight:700;border:0.5px solid var(--border-med);border-radius:4px;background:var(--bg);color:var(--text)"/>% de la position (↑)
+          </div>
+        </div>
+        <div style="padding:12px;border-radius:var(--radius);background:rgba(127,29,29,0.1);border:0.5px solid rgba(127,29,29,0.3)">
+          <div style="font-size:11px;font-weight:700;color:#7F1D1D;font-family:'Courier New',monospace;text-transform:uppercase;margin-bottom:8px">● VENTE FORTE</div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:13px">
+            Vendre <input type="number" id="bt-pct-vf" value="100" min="0" max="100" step="5" style="width:62px;padding:4px 6px;font-size:13px;font-weight:700;border:0.5px solid var(--border-med);border-radius:4px;background:var(--bg);color:var(--text)"/>% de la position
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Source des signaux ─────────────────────────────────────────── -->
+    <div class="info-card" style="margin-bottom:1.25rem">
+      <h3>Source des signaux & seuils</h3>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:10px;align-items:flex-start">
+        <div>
+          <div class="lbl" style="font-size:11px;color:var(--text-sec);font-family:'Courier New',monospace;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Source</div>
+          <select id="bt-signal-src" style="padding:8px 10px;font-size:13px;font-family:inherit;border:0.5px solid var(--border-med);border-radius:var(--radius);background:var(--bg);color:var(--text)">
+            <option value="rsi">RSI(14) seul</option>
+            <option value="macd">MACD seul</option>
+            <option value="rsi_macd">RSI + MACD combinés</option>
+          </select>
+        </div>
+        <div>
+          <div class="lbl" style="font-size:11px;color:var(--text-sec);font-family:'Courier New',monospace;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px">Seuils RSI (utilisés si source = RSI ou combiné)</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:12.5px;align-items:center">
+            <span style="color:var(--text-sec)">Achat Fort &lt;</span><input type="number" id="bt-rsi-af" value="25" min="1" max="49" style="width:46px;padding:4px 6px;font-size:12px;border:0.5px solid var(--border-med);border-radius:4px;background:var(--bg);color:var(--text);font-weight:700"/>
+            <span style="color:var(--text-sec)">Achat &lt;</span><input type="number" id="bt-rsi-a" value="40" min="1" max="60" style="width:46px;padding:4px 6px;font-size:12px;border:0.5px solid var(--border-med);border-radius:4px;background:var(--bg);color:var(--text);font-weight:700"/>
+            <span style="color:var(--text-sec)">Vente &gt;</span><input type="number" id="bt-rsi-v" value="60" min="40" max="90" style="width:46px;padding:4px 6px;font-size:12px;border:0.5px solid var(--border-med);border-radius:4px;background:var(--bg);color:var(--text);font-weight:700"/>
+            <span style="color:var(--text-sec)">Vente Forte &gt;</span><input type="number" id="bt-rsi-vf" value="75" min="50" max="99" style="width:46px;padding:4px 6px;font-size:12px;border:0.5px solid var(--border-med);border-radius:4px;background:var(--bg);color:var(--text);font-weight:700"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Autres paramètres ─────────────────────────────────────────── -->
+    <div class="info-card" style="margin-bottom:1.25rem">
+      <h3>Autres contraintes de gestion</h3>
+      <div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center;margin-top:10px;font-size:13px">
+        <label style="display:flex;align-items:center;gap:7px">
+          Max par actif
+          <input type="number" id="bt-max-pos" value="25" min="5" max="100" step="5" style="width:58px;padding:5px 7px;font-size:13px;font-weight:700;border:0.5px solid var(--border-med);border-radius:4px;background:var(--bg);color:var(--text)"/>
+          % du capital
+          <span style="font-size:11px;color:var(--text-sec)">(évite la sur-concentration)</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:7px">
+          Réserve cash mini
+          <input type="number" id="bt-cash-reserve" value="5" min="0" max="50" step="1" style="width:52px;padding:5px 7px;font-size:13px;font-weight:700;border:0.5px solid var(--border-med);border-radius:4px;background:var(--bg);color:var(--text)"/>
+          % du capital
+          <span style="font-size:11px;color:var(--text-sec)">(poche liquide garantie)</span>
+        </label>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center;font-size:13px">
+        <strong>Univers d'actifs :</strong>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="bt-universe" value="portfolio" checked/> Portefeuille algo</label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="radio" name="bt-universe" value="all"/> Tous BRVM (47 actifs)</label>
+      </div>
+    </div>
+
+    <button onclick="runBtBacktest()" style="padding:10px 26px;font-size:14px;font-family:inherit;font-weight:700;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;letter-spacing:.01em;margin-bottom:1.5rem">▶ Lancer le backtest</button>
+
+    <!-- ── Résultats ──────────────────────────────────────────────────── -->
+    <div id="backtest-result" style="display:none">
+      <div id="backtest-metrics" class="metrics" style="margin-bottom:1.25rem"></div>
+      <div class="info-card" style="margin-bottom:1.25rem">
+        <h3>Performance historique — Base 100</h3>
+        <div class="legend" style="margin-top:6px">
+          <span><i style="background:#185FA5"></i>Stratégie signaux</span>
+          <span><i style="background:#F59E0B"></i>Buy &amp; Hold (équipondéré)</span>
+          <span><i style="background:#1D9E75"></i>BRVM Composite</span>
+        </div>
+        <div class="chart-wrap" style="height:380px;margin-top:8px"><canvas id="chart-backtest"></canvas></div>
+      </div>
+      <div id="bt-trades-section"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Configuration du dépôt GitHub ────────────────────────────────────────────
+// Le dépôt étant PRIVÉ, raw.githubusercontent.com renvoie 404 sans authentification.
+// On passe donc par l'API GitHub avec un jeton en lecture seule.
+const GH_OWNER  = 'DylaneTrader';
+const GH_REPO   = 'Scraper-BRVM';
+const GH_BRANCH = 'main';
+// Jeton à portée fine, lecture seule (Contents: Read-only) sur Scraper-BRVM uniquement.
+// Il n'est jamais écrit dans ce fichier : on le passe une fois dans l'adresse
+// (brvm_dashboard_enriched.html#jeton=VOTRE_JETON) ; il est alors gardé dans le
+// navigateur (localStorage) et retiré de l'adresse. Vide si le dépôt devient public.
+const GH_TOKEN = (() => {
+  try {
+    const t = new URLSearchParams(location.hash.slice(1)).get('jeton');
+    if (t) {
+      localStorage.setItem('brvm_gh_token', t);
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+    return t || localStorage.getItem('brvm_gh_token') || '';
+  } catch (e) {
+    return '';
+  }
+})();
+
+const BASE = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/data`;
+const TICKERS = ["ABJC_ci","BICB_bj","BICC_ci","BNBC_ci","BOABF_bf","BOAB_bj","BOAC_ci","BOAM_ml","BOAN_ne","BOAS_sn","CABC_ci","CBIBF_bf","CFAC_ci","CIEC_ci","ECOC_ci","ETIT_tg","FTSC_ci","LNBB_bj","NEIC_ci","NSBC_ci","NTLC_ci","ONTBF_bf","ORAC_ci","ORGT_tg","PALC_ci","PRSC_ci","SAFC_ci","SCRC_ci","SDCC_ci","SDSC_ci","SEMC_ci","SGBC_ci","SHEC_ci","SIBC_ci","SICC_ci","SIVC_ci","SLBC_ci","SMBC_ci","SNTS_sn","SOGC_ci","SPHC_ci","STAC_ci","STBC_ci","TTLC_ci","TTLS_sn","UNLC_ci","UNXC_ci"];
+const INDICES = ["BRVMC","BRVM30","BRVMPA","BRVMPR","BRVM_CB","BRVM_CD","BRVM_EN","BRVM_IN","BRVM_SF","BRVM_TEL","CAPIBRVM","SIKAIDX","SIKATR"];
+
+let period = 30, chartAction = null, chartIndice = null, allIndices = [];
+const cache = {};
+
+// Données dynamiques — chargées depuis le repo (data/signals, data/algo).
+// signals_latest.json et portfolio_latest.json sont régénérés par le workflow GitHub Actions.
+let ALGO_DATA = { backtest: null, allocation: {} };
+let SIGNALS_DATA = {};
+let SIGNALS_META = { generated_at: null };
+let SIGNALS_HISTORY = { tickers: {} };
+let chartSigHist = null;
+
+async function loadSignalsData() {
+  const sigUrl = `${BASE}/signals/signals_latest.json`;
+  const algoUrl = `${BASE}/algo/portfolio_latest.json`;
+  const [sigTxt, algoTxt] = await Promise.all([get(sigUrl), get(algoUrl)]);
+  const sigJson = JSON.parse(sigTxt);
+  const algoJson = JSON.parse(algoTxt);
+  SIGNALS_DATA = sigJson.signals || {};
+  SIGNALS_META = { generated_at: sigJson.generated_at || null };
+  ALGO_DATA = {
+    backtest: algoJson.backtest || null,
+    allocation: algoJson.allocation || {},
+    generated_at: algoJson.generated_at || null,
+    horizon_days: algoJson.horizon_days || 30,
+    expected_return_30d: algoJson.expected_return_30d ?? null,
+    expected_volatility_30d: algoJson.expected_volatility_30d ?? null,
+    sharpe_ratio_30d: algoJson.sharpe_ratio_30d ?? null,
+  };
+  // Historique de signaux (optionnel — généré par build_signals_history.py).
+  try {
+    let histTxt;
+    try {
+      histTxt = await get(`${BASE}/signals/signals_history.json`);
+    } catch (ghErr) {
+      // Fallback dev local : fichier servi à côté du HTML (file:// ou serveur statique).
+      const localResp = await fetch('../data/signals/signals_history.json');
+      if (!localResp.ok) throw ghErr;
+      histTxt = await localResp.text();
+    }
+    const histJson = JSON.parse(histTxt);
+    SIGNALS_HISTORY = { tickers: histJson.tickers || {}, generated_at: histJson.generated_at || null };
+  } catch (e) {
+    console.warn('signals_history.json not loaded:', e.message);
+    SIGNALS_HISTORY = { tickers: {} };
+  }
+}
+
+async function get(url) {
+  if (cache[url]) return cache[url];
+  let r;
+  // Dépôt privé : on passe par l'API GitHub avec le jeton, qui sert le contenu brut.
+  if (GH_TOKEN && url.startsWith('https://raw.githubusercontent.com/')) {
+    const path = url.replace(`https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/`, '');
+    const apiUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${path}?ref=${GH_BRANCH}`;
+    r = await fetch(apiUrl, {
+      headers: {
+        'Authorization': `Bearer ${GH_TOKEN}`,
+        'Accept': 'application/vnd.github.raw'
+      }
+    });
+  } else {
+    r = await fetch(url);
+  }
+  if (!r.ok) throw new Error(`HTTP ${r.status} – ${url.split('/').pop()}`);
+  const text = await r.text();
+  cache[url] = text;
+  return text;
+}
+
+function parseCSV(text) {
+  const lines = text.replace(/^\uFEFF/, '').trim().split('\n');
+  const headers = lines[0].split(';').map(h => h.trim());
+  return lines.slice(1).map(l => {
+    const vals = l.split(';');
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (vals[i] || '').trim().replace(',', '.'); });
+    return obj;
+  }).filter(r => r.Date && /\d{4}/.test(r.Date));
+}
+
+function filterPeriod(rows) {
+  if (!period) return rows;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - period);
+  return rows.filter(r => new Date(r.Date) >= cutoff);
+}
+
+function populateSelects() {
+  ['sel-action', 'sel-societe', 'sel-fond'].forEach(id => {
+    document.getElementById(id).innerHTML = TICKERS.map(t =>
+      `<option value="${t}">${t.replace('_', ' ').toUpperCase()}</option>`
+    ).join('');
+  });
+}
+
+
+let chartAlgoPie = null, chartBacktest = null, chartAlgoPnl = null;
+let ALGO_PRICES = {};      // ticker -> [{date, close}, ...]
+let BRVMC_PRICES = [];     // [{date, close}, ...]
+let DIVIDENDES_FUTURS = []; // [{ticker_norm, ...}]
+let DIVIDENDES_PASSES = [];
+let USER_HOLDINGS = null;  // {ticker: nbActions} — null = utiliser la cible
+
+function setCapital(v) {
+    const inp = document.getElementById('algo-capital');
+    if (inp) { inp.value = v; loadAlgo(); }
+}
+
+function fmtFCFA(v) {
+    if (!isFinite(v)) return '–';
+    return Math.round(v).toLocaleString('fr-FR');
+}
+
+function fmtDate(d) {
+    if (!d) return '–';
+    const dt = (d instanceof Date) ? d : new Date(d);
+    if (isNaN(dt)) return '–';
+    return dt.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function parseFrNum(s) {
+    if (s === null || s === undefined) return NaN;
+    return parseFloat(String(s).replace(/\s/g, '').replace(',', '.'));
+}
+
+// Normalise tickers entre algo (NSBC_ci) et dividendes (NSBC.ci)
+function tickerToDivFormat(t) { return t.replace('_', '.').toUpperCase(); }
+function tickerFromDiv(t) { return t.replace('.', '_').toLowerCase(); }
+
+async function ensureAlgoPrices(tickers) {
+    const missing = tickers.filter(t => !ALGO_PRICES[t]);
+    if (!missing.length) return;
+    await Promise.all(missing.map(async t => {
+        try {
+            const txt = await get(`${BASE}/actions/${t}_historique.csv`);
+            const rows = parseCSV(txt);
+            ALGO_PRICES[t] = rows
+                .map(r => ({ date: r.Date, close: parseFloat(r.Cloture) }))
+                .filter(r => r.date && !isNaN(r.close) && r.close > 0)
+                .sort((a, b) => a.date.localeCompare(b.date));
+        } catch (e) {
+            ALGO_PRICES[t] = [];
+        }
+    }));
+}
+
+async function ensureBRVMC() {
+    if (BRVMC_PRICES.length) return;
+    try {
+        const txt = await get(`${BASE}/indices/BRVMC_historique.csv`);
+        const rows = parseCSV(txt);
+        BRVMC_PRICES = rows
+            .map(r => ({ date: r.Date, close: parseFloat(r.Cloture) }))
+            .filter(r => r.date && !isNaN(r.close) && r.close > 0)
+            .sort((a, b) => a.date.localeCompare(b.date));
+    } catch { BRVMC_PRICES = []; }
+}
+
+function brvmcAtOrBefore(dateStr) {
+    if (!BRVMC_PRICES.length) return null;
+    let last = null;
+    for (const p of BRVMC_PRICES) {
+        if (p.date <= dateStr) last = p;
+        else break;
+    }
+    return last;
+}
+
+async function ensureDividendes() {
+    if (DIVIDENDES_FUTURS.length || DIVIDENDES_PASSES.length) return;
+    try {
+        const txt = await get(`${BASE}/dividendes/dividendes_a_venir.csv`);
+        DIVIDENDES_FUTURS = parseCSV(txt);
+    } catch { DIVIDENDES_FUTURS = []; }
+    try {
+        const txt = await get(`${BASE}/dividendes/dividendes_passes.csv`);
+        DIVIDENDES_PASSES = parseCSV(txt);
+    } catch { DIVIDENDES_PASSES = []; }
+}
+
+function priceAtOrBefore(ticker, dateStr) {
+    const ser = ALGO_PRICES[ticker] || [];
+    if (!ser.length) return null;
+    let last = null;
+    for (const p of ser) {
+        if (p.date <= dateStr) last = p;
+        else break;
+    }
+    return last;
+}
+
+function todayISO() { return new Date().toISOString().slice(0, 10); }
+
+function initStartDateIfEmpty() {
+    const inp = document.getElementById('algo-startdate');
+    if (inp && !inp.value) inp.value = todayISO();
+}
+
+function renderAlgoMeta(generatedAt, startDate, capital) {
+    const meta = document.getElementById('algo-meta');
+    const genDate = generatedAt ? new Date(generatedAt) : null;
+    const nextRebal = genDate ? new Date(genDate.getTime() + 30 * 86400000) : null;
+    const today = new Date();
+    const daysUntilRebal = nextRebal ? Math.ceil((nextRebal - today) / 86400000) : null;
+    meta.innerHTML = `
+      <div class="metric"><div class="lbl">Allocation générée</div><div class="val" style="font-size:14px">${fmtDate(genDate)}</div></div>
+      <div class="metric"><div class="lbl">Prochain rebalancement</div><div class="val" style="font-size:14px">${fmtDate(nextRebal)}</div><div class="sub">${daysUntilRebal !== null ? (daysUntilRebal > 0 ? 'dans ' + daysUntilRebal + ' j' : 'attendu') : ''}</div></div>
+      <div class="metric"><div class="lbl">Date de suivi</div><div class="val" style="font-size:14px">${fmtDate(startDate)}</div></div>
+      <div class="metric"><div class="lbl">Capital total</div><div class="val">${fmtFCFA(capital)} F</div></div>
+    `;
+}
+
+async function loadAlgo() {
+    const table = document.getElementById('algo-weights-table');
+    const weights = ALGO_DATA.allocation || {};
+    if (Object.keys(weights).length === 0) {
+      table.innerHTML = '<div class="muted" style="padding:12px">Allocation indisponible — relancer le pipeline.</div>';
+      return;
+    }
+    initStartDateIfEmpty();
+    const capital = parseFloat(document.getElementById('algo-capital').value) || 0;
+    const feesPct = parseFloat(document.getElementById('algo-fees').value) || 0;
+    const feesRate = feesPct / 100;
+    const startDate = document.getElementById('algo-startdate').value || todayISO();
+    const sorted = Object.entries(weights).sort((a, b) => b[1] - a[1]);
+    const tickers = sorted.map(([t]) => t);
+
+    table.innerHTML = '<div class="loading"><span class="spinner"></span>Chargement des prix...</div>';
+    await Promise.all([ensureAlgoPrices(tickers), ensureDividendes(), ensureBRVMC()]);
+
+    // Construction de l'allocation réalisable
+    const rows = [];
+    let totalInvested = 0, totalFees = 0;
+    sorted.forEach(([t, w]) => {
+        const budgetBrut = capital * w;            // montant cible théorique
+        const budgetNet = budgetBrut * (1 - feesRate); // après frais courtage
+        const ref = priceAtOrBefore(t, startDate);
+        const price = ref ? ref.close : null;
+        const priceDate = ref ? ref.date : null;
+        let nbActions = 0, montantReel = 0, fees = 0, residual = budgetBrut;
+        let status = 'OK';
+        if (!price || price <= 0) {
+            status = 'PRIX_INDISPO';
+        } else {
+            nbActions = Math.floor(budgetNet / price);
+            montantReel = nbActions * price;
+            fees = montantReel * feesRate;
+            residual = budgetBrut - montantReel - fees;
+            if (nbActions === 0) status = 'INATTEIGNABLE';
+        }
+        totalInvested += montantReel;
+        totalFees += fees;
+        rows.push({ ticker: t, poids: w, budgetBrut, price, priceDate, nbActions, montantReel, fees, residual, status });
+    });
+    const totalAllocWeight = sorted.reduce((s, [, w]) => s + w, 0);
+    const unallocatedTheorique = capital * (1 - totalAllocWeight);
+    const cashTotal = capital - totalInvested - totalFees;
+
+    renderAlgoMeta(ALGO_DATA.generated_at || SIGNALS_META.generated_at, startDate, capital);
+
+    // Table
+    table.innerHTML = `
+        <table class="fond-table" style="font-size:12.5px">
+            <thead><tr>
+              <th>Actif</th>
+              <th style="text-align:right">Poids</th>
+              <th style="text-align:right">Prix unit.</th>
+              <th style="text-align:right">Nb actions</th>
+              <th style="text-align:right">Montant réel</th>
+              <th style="text-align:right">Frais</th>
+              <th style="text-align:right">Résidu</th>
+              <th>Statut</th>
+            </tr></thead>
+            <tbody>
+                ${rows.map(r => {
+                    const statusBadge = r.status === 'OK'
+                        ? '<span style="color:var(--up);font-size:11px">✓ OK</span>'
+                        : r.status === 'INATTEIGNABLE'
+                            ? '<span style="color:var(--down);font-size:11px">⚠ non atteignable</span>'
+                            : '<span style="color:var(--text-sec);font-size:11px">⚠ prix indispo.</span>';
+                    return `
+                    <tr>
+                        <td style="font-weight:600">${r.ticker.replace('_', ' ').toUpperCase()}</td>
+                        <td style="text-align:right">${(r.poids * 100).toFixed(2)}%</td>
+                        <td style="text-align:right">${r.price ? fmtFCFA(r.price) : '–'}</td>
+                        <td style="text-align:right;font-weight:700">${r.nbActions}</td>
+                        <td style="text-align:right;color:var(--blue);font-weight:700">${fmtFCFA(r.montantReel)}</td>
+                        <td style="text-align:right;color:var(--text-sec);font-size:11px">${fmtFCFA(r.fees)}</td>
+                        <td style="text-align:right;color:var(--text-sec);font-size:11px">${fmtFCFA(r.residual)}</td>
+                        <td>${statusBadge}</td>
+                    </tr>`;
+                }).join('')}
+            </tbody>
+        </table>
+    `;
+
+    // Résumé
+    const utilRate = capital > 0 ? (totalInvested / capital * 100) : 0;
+    document.getElementById('algo-summary').innerHTML = `
+      <div class="metrics" style="margin-bottom:0">
+        <div class="metric"><div class="lbl">Investi (titres)</div><div class="val" style="font-size:15px;color:var(--blue)">${fmtFCFA(totalInvested)} F</div><div class="sub">${utilRate.toFixed(1)}% du capital</div></div>
+        <div class="metric"><div class="lbl">Frais courtage</div><div class="val" style="font-size:15px;color:var(--down)">${fmtFCFA(totalFees)} F</div><div class="sub">${feesPct.toFixed(2)}%</div></div>
+        <div class="metric"><div class="lbl">Cash résiduel</div><div class="val" style="font-size:15px;color:var(--text-sec)">${fmtFCFA(cashTotal)} F</div><div class="sub">non investi</div></div>
+        ${unallocatedTheorique > 1 ? `<div class="metric"><div class="lbl">Non alloué BL</div><div class="val" style="font-size:15px;color:var(--text-sec)">${((1-totalAllocWeight)*100).toFixed(2)}%</div></div>` : ''}
+      </div>
+    `;
+
+    // Pie sur montants réels
+    const realRows = rows.filter(r => r.montantReel > 0);
+    drawAlgoPie(realRows.map(r => [r.ticker, r.montantReel]));
+
+    // P&L, dividendes, plan d'action, simulation rebalancement
+    const capitalRef = capital;
+    renderDividendes(rows, startDate);
+    drawPortfolioPnl(rows, startDate, cashTotal, capitalRef);
+    renderActionPlan(rows, feesRate, startDate);
+    renderRebalSim(rows, feesRate, startDate);
+}
+
+function drawAlgoPie(data) {
+    const ctx = document.getElementById('chart-algo-pie').getContext('2d');
+    if (chartAlgoPie) chartAlgoPie.destroy();
+    const colors = ['#185FA5', '#1D9E75', '#E24B4A', '#F59E0B', '#8B5CF6', '#EC4899', '#10B981', '#3B82F6', '#6366F1', '#D946EF', '#0EA5E9', '#84CC16', '#F97316', '#A855F7'];
+    const total = data.reduce((s, d) => s + d[1], 0) || 1;
+    chartAlgoPie = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: data.map(d => d[0].split('_')[0]),
+            datasets: [{ data: data.map(d => d[1]), backgroundColor: colors, borderWidth: 0 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { display: true, position: 'right', labels: { font: { size: 10 }, boxWidth: 10, padding: 6, color: isDark() ? '#f0efe9' : '#1a1a18' } },
+                tooltip: {
+                    callbacks: {
+                        label: (c) => ` ${c.label}: ${fmtFCFA(c.parsed)} F (${(c.parsed / total * 100).toFixed(1)}%)`
+                    }
+                }
+            },
+            cutout: '60%'
+        }
+    });
+}
+
+function renderDividendes(rows, startDate) {
+    const el = document.getElementById('algo-dividendes');
+    const holdings = {};
+    rows.forEach(r => { if (r.nbActions > 0) holdings[tickerToDivFormat(r.ticker)] = r.nbActions; });
+    const futurs = DIVIDENDES_FUTURS
+        .filter(d => holdings[d.Ticker])
+        .filter(d => !d.Date_Detachement || d.Date_Detachement >= startDate)
+        .sort((a, b) => (a.Date_Detachement || '').localeCompare(b.Date_Detachement || ''));
+    if (!futurs.length) {
+        el.innerHTML = '<div style="color:var(--text-sec);font-size:13px;padding:8px">Aucun dividende à venir connu pour les actifs détenus à partir du ' + fmtDate(startDate) + '.</div>';
+        return;
+    }
+    let totalDiv = 0;
+    const lines = futurs.map(d => {
+        const nb = holdings[d.Ticker];
+        const montant = parseFrNum(d.Montant_Net_FCFA);
+        const total = nb * montant;
+        totalDiv += total;
+        return `<tr>
+          <td style="font-weight:600">${d.Ticker}</td>
+          <td>${d.Nom_Canonique || ''}</td>
+          <td style="text-align:right">${nb}</td>
+          <td style="text-align:right">${isFinite(montant) ? fmtFCFA(montant) : '–'} F</td>
+          <td style="text-align:right;font-weight:700;color:var(--green)">${fmtFCFA(total)} F</td>
+          <td>${fmtDate(d.Date_Detachement)}</td>
+          <td>${fmtDate(d.Date_Paiement)}</td>
+        </tr>`;
+    }).join('');
+    el.innerHTML = `
+      <table class="fond-table" style="font-size:12.5px">
+        <thead><tr>
+          <th>Ticker</th><th>Nom</th>
+          <th style="text-align:right">Nb actions</th>
+          <th style="text-align:right">Div/action</th>
+          <th style="text-align:right">Total à recevoir</th>
+          <th>Détachement</th><th>Paiement</th>
+        </tr></thead>
+        <tbody>${lines}</tbody>
+        <tfoot><tr style="border-top:1px solid var(--border-med)">
+          <td colspan="4" style="padding-top:10px;font-weight:700;font-size:11px;text-transform:uppercase;font-family:'Courier New',monospace;color:var(--text-sec)">Total dividendes attendus</td>
+          <td style="padding-top:10px;text-align:right;font-weight:700;color:var(--green);font-size:14px">${fmtFCFA(totalDiv)} F</td>
+          <td colspan="2"></td>
+        </tr></tfoot>
+      </table>
+    `;
+}
+
+function drawPortfolioPnl(rows, startDate, cashInitial, capitalRef) {
+    const ctx = document.getElementById('chart-algo-pnl').getContext('2d');
+    if (chartAlgoPnl) chartAlgoPnl.destroy();
+    const holdings = rows.filter(r => r.nbActions > 0).map(r => ({ ticker: r.ticker, nb: r.nbActions }));
+    if (!holdings.length) {
+        document.getElementById('algo-pnl-metrics').innerHTML = '<div class="err-box">Aucune action détenue — impossible de tracer l\'évolution.</div>';
+        return;
+    }
+
+    // Univers de dates: union entre startDate et aujourd'hui
+    const allDates = new Set();
+    holdings.forEach(h => {
+        (ALGO_PRICES[h.ticker] || []).forEach(p => { if (p.date >= startDate) allDates.add(p.date); });
+    });
+    const dates = Array.from(allDates).sort();
+    if (!dates.length) {
+        document.getElementById('algo-pnl-metrics').innerHTML = '<div class="err-box">Pas de prix postérieurs au ' + fmtDate(startDate) + '.</div>';
+        return;
+    }
+
+    // === Portefeuille Algo (rebalançable, ici figé à J0 avec dividendes) ===
+    const values = dates.map(d => {
+        let v = cashInitial;
+        holdings.forEach(h => {
+            const ref = priceAtOrBefore(h.ticker, d);
+            if (ref) v += h.nb * ref.close;
+        });
+        DIVIDENDES_FUTURS.concat(DIVIDENDES_PASSES).forEach(div => {
+            const tnorm = tickerFromDiv(div.Ticker || '');
+            const h = holdings.find(x => x.ticker === tnorm);
+            if (!h) return;
+            const dp = div.Date_Paiement;
+            if (dp && dp > startDate && dp <= d) {
+                const m = parseFrNum(div.Montant_Net_FCFA);
+                if (isFinite(m)) v += h.nb * m;
+            }
+        });
+        return v;
+    });
+
+    // === B&H = même allocation, figée, SANS dividendes (pour comparaison pure prix) ===
+    const valuesBH = dates.map(d => {
+        let v = cashInitial;
+        holdings.forEach(h => {
+            const ref = priceAtOrBefore(h.ticker, d);
+            if (ref) v += h.nb * ref.close;
+        });
+        return v;
+    });
+
+    // === BRVMC mis à l'échelle ===
+    const brvmcRef = brvmcAtOrBefore(dates[0]);
+    let valuesBRVMC = null;
+    if (brvmcRef && brvmcRef.close > 0) {
+        const refClose = brvmcRef.close;
+        valuesBRVMC = dates.map(d => {
+            const p = brvmcAtOrBefore(d);
+            return p ? capitalRef * (p.close / refClose) : null;
+        });
+    }
+
+    const initial = values[0];
+    const current = values[values.length - 1];
+    const pnl = current - initial;
+    const pnlPct = initial > 0 ? (pnl / initial * 100) : 0;
+    const days = Math.max(1, (new Date(dates[dates.length - 1]) - new Date(dates[0])) / 86400000);
+    const annualized = initial > 0 ? (Math.pow(current / initial, 365 / days) - 1) * 100 : 0;
+
+    const bhPnlPct = valuesBH[0] > 0 ? ((valuesBH[valuesBH.length - 1] / valuesBH[0]) - 1) * 100 : 0;
+    const brvmPnlPct = (valuesBRVMC && valuesBRVMC[0]) ? ((valuesBRVMC[valuesBRVMC.length - 1] / valuesBRVMC[0]) - 1) * 100 : null;
+    const alphaBH = pnlPct - bhPnlPct;
+    const alphaBRVMC = brvmPnlPct !== null ? pnlPct - brvmPnlPct : null;
+
+    document.getElementById('algo-pnl-metrics').innerHTML = `
+      <div class="metric"><div class="lbl">Valeur initiale</div><div class="val" style="font-size:15px">${fmtFCFA(initial)} F</div><div class="sub">${fmtDate(dates[0])}</div></div>
+      <div class="metric"><div class="lbl">Valeur actuelle</div><div class="val" style="font-size:15px">${fmtFCFA(current)} F</div><div class="sub">${fmtDate(dates[dates.length - 1])}</div></div>
+      <div class="metric"><div class="lbl">P&L Algo</div><div class="val ${pnl >= 0 ? 'up' : 'down'}" style="font-size:15px">${pnl >= 0 ? '+' : ''}${fmtFCFA(pnl)} F</div><div class="sub ${pnlPct >= 0 ? 'up' : 'down'}">${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%</div></div>
+      <div class="metric"><div class="lbl">Annualisé</div><div class="val ${annualized >= 0 ? 'up' : 'down'}" style="font-size:15px">${annualized >= 0 ? '+' : ''}${annualized.toFixed(2)}%</div><div class="sub">${Math.round(days)} j de suivi</div></div>
+      <div class="metric"><div class="lbl">B&H</div><div class="val ${bhPnlPct >= 0 ? 'up' : 'down'}" style="font-size:15px">${bhPnlPct >= 0 ? '+' : ''}${bhPnlPct.toFixed(2)}%</div><div class="sub">α vs Algo : ${alphaBH >= 0 ? '+' : ''}${alphaBH.toFixed(2)}%</div></div>
+      ${brvmPnlPct !== null ? `<div class="metric"><div class="lbl">BRVM Composite</div><div class="val ${brvmPnlPct >= 0 ? 'up' : 'down'}" style="font-size:15px">${brvmPnlPct >= 0 ? '+' : ''}${brvmPnlPct.toFixed(2)}%</div><div class="sub">α vs Algo : ${alphaBRVMC >= 0 ? '+' : ''}${alphaBRVMC.toFixed(2)}%</div></div>` : ''}
+    `;
+
+    const c = chartColors();
+    const datasets = [
+        { label: 'Portefeuille Algo', data: values, borderColor: '#185FA5', backgroundColor: 'rgba(24,95,165,0.10)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.15 },
+        { label: 'Buy & Hold (figé J0)', data: valuesBH, borderColor: '#F59E0B', borderWidth: 2, pointRadius: 0, fill: false, tension: 0.15, borderDash: [6, 3] },
+    ];
+    if (valuesBRVMC) {
+        datasets.push({ label: 'BRVM Composite', data: valuesBRVMC, borderColor: '#1D9E75', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.15 });
+    }
+    datasets.push({ label: 'Capital initial', data: dates.map(() => initial), borderColor: '#888', borderWidth: 1, borderDash: [4, 4], pointRadius: 0, fill: false });
+
+    chartAlgoPnl = new Chart(ctx, {
+        type: 'line',
+        data: { labels: dates, datasets },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: true, position: 'top', labels: { color: c.text, font: { size: 11 }, boxWidth: 14 } },
+                tooltip: { callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmtFCFA(ctx.parsed.y)} F` } }
+            },
+            scales: {
+                x: { ticks: { maxTicksLimit: 10, color: c.text, font: { size: 11 } }, grid: { display: false } },
+                y: { ticks: { color: c.text, font: { size: 11 }, callback: v => v.toLocaleString('fr-FR') }, grid: { color: c.grid } }
+            }
+        }
+    });
+}
+
+// ============================================================
+// Plan d'action : portefeuille actuel vs allocation cible
+// ============================================================
+function getHoldingsForTarget(rows) {
+    // Si USER_HOLDINGS n'est pas défini, on initialise sur la cible.
+    if (USER_HOLDINGS === null) {
+        USER_HOLDINGS = {};
+        rows.forEach(r => { USER_HOLDINGS[r.ticker] = r.nbActions; });
+    }
+    return USER_HOLDINGS;
+}
+
+function resetHoldingsToTarget() {
+    USER_HOLDINGS = null;
+    loadAlgo();
+}
+
+function clearHoldings() {
+    USER_HOLDINGS = {};
+    loadAlgo();
+}
+
+function updateHolding(ticker, value) {
+    if (USER_HOLDINGS === null) USER_HOLDINGS = {};
+    USER_HOLDINGS[ticker] = Math.max(0, parseInt(value) || 0);
+    renderActionPlan(window.__lastAlgoRows || [], window.__lastFeesRate || 0.01, window.__lastStartDate || todayISO());
+    renderRebalSim(window.__lastAlgoRows || [], window.__lastFeesRate || 0.01, window.__lastStartDate || todayISO());
+}
+
+function getProphetSignal(ticker) {
+    return SIGNALS_DATA[ticker] || null;
+}
+
+function actionLabel(deltaActions, currentNb, targetNb) {
+    if (targetNb === 0 && currentNb > 0) return { lbl: 'VENDRE TOUT', cls: 'sig-vente-fort', delta: -currentNb };
+    if (currentNb === 0 && targetNb > 0) return { lbl: 'ACHETER', cls: 'sig-achat-fort', delta: targetNb };
+    if (deltaActions > 0) return { lbl: 'RENFORCER +' + deltaActions, cls: 'sig-achat', delta: deltaActions };
+    if (deltaActions < 0) return { lbl: 'ALLÉGER ' + deltaActions, cls: 'sig-vente', delta: deltaActions };
+    return { lbl: 'CONSERVER', cls: 'sig-neutre', delta: 0 };
+}
+
+function renderActionPlan(rows, feesRate, startDate) {
+    window.__lastAlgoRows = rows;
+    window.__lastFeesRate = feesRate;
+    window.__lastStartDate = startDate;
+    const el = document.getElementById('algo-action-plan');
+    if (!rows.length) { el.innerHTML = ''; return; }
+
+    const holdings = getHoldingsForTarget(rows);
+    // Inclure aussi les tickers détenus mais absents de la cible
+    const allTickers = new Set(rows.map(r => r.ticker));
+    Object.keys(holdings).forEach(t => allTickers.add(t));
+
+    const rowsByTicker = {};
+    rows.forEach(r => { rowsByTicker[r.ticker] = r; });
+
+    const lines = Array.from(allTickers).map(t => {
+        const r = rowsByTicker[t];
+        const targetNb = r ? r.nbActions : 0;
+        const currentNb = holdings[t] || 0;
+        const price = r && r.price ? r.price : (priceAtOrBefore(t, startDate)?.close || null);
+        const delta = targetNb - currentNb;
+        const act = actionLabel(delta, currentNb, targetNb);
+        const sig = getProphetSignal(t);
+        const conflit = (sig && (sig.signal === 'VENTE' || sig.signal === 'VENTE FORTE') && currentNb > 0 && targetNb > 0);
+        const montantOp = price ? Math.abs(act.delta) * price : 0;
+        return { t, currentNb, targetNb, price, delta, act, sig, conflit, montantOp };
+    }).sort((a, b) => {
+        // Priorité d'affichage : actions à faire en premier, puis par |montant| décroissant
+        const aPrio = a.act.lbl === 'CONSERVER' ? 1 : 0;
+        const bPrio = b.act.lbl === 'CONSERVER' ? 1 : 0;
+        if (aPrio !== bPrio) return aPrio - bPrio;
+        return b.montantOp - a.montantOp;
+    });
+
+    el.innerHTML = `
+      <table class="fond-table" style="font-size:12.5px">
+        <thead><tr>
+          <th>Ticker</th>
+          <th style="text-align:right">Détenu</th>
+          <th style="text-align:right">Cible</th>
+          <th style="text-align:right">Prix</th>
+          <th>Action</th>
+          <th style="text-align:right">Montant op.</th>
+          <th>Signal Prophet</th>
+          <th>Date signal</th>
+          <th>Cible 30j</th>
+        </tr></thead>
+        <tbody>
+          ${lines.map(l => {
+            const sigBadge = l.sig
+              ? `<span class="sig-badge sig-${l.sig.signal.toLowerCase().replace(' ', '-')}">${l.sig.signal}</span>`
+              : '<span style="color:var(--text-sec);font-size:11px">–</span>';
+            const conflitTag = l.conflit ? ' <span style="color:var(--down);font-size:10px;font-weight:700" title="BL conserve mais Prophet signale VENTE">⚠ conflit</span>' : '';
+            return `<tr ${l.conflit ? 'style="background:rgba(226,75,74,0.06)"' : ''}>
+              <td style="font-weight:600">${l.t.replace('_', ' ').toUpperCase()}${conflitTag}</td>
+              <td style="text-align:right">
+                <input type="number" min="0" value="${l.currentNb}" style="width:70px;padding:3px 6px;font-size:12px;border:0.5px solid var(--border-med);border-radius:4px;background:var(--bg);color:var(--text);text-align:right" oninput="updateHolding('${l.t}', this.value)"/>
+              </td>
+              <td style="text-align:right;font-weight:700">${l.targetNb}</td>
+              <td style="text-align:right">${l.price ? fmtFCFA(l.price) : '–'}</td>
+              <td><span class="sig-badge ${l.act.cls}">${l.act.lbl}</span></td>
+              <td style="text-align:right;font-weight:700;color:${l.act.delta > 0 ? 'var(--down)' : (l.act.delta < 0 ? 'var(--up)' : 'var(--text-sec)')}">${l.act.delta !== 0 ? (l.act.delta > 0 ? '-' : '+') + fmtFCFA(l.montantOp) : '–'}</td>
+              <td>${sigBadge} <span style="font-size:10px;color:var(--text-sec)">${l.sig ? l.sig.confidence : ''}</span></td>
+              <td style="font-family:'Courier New',monospace;font-size:11px;color:var(--text-sec)">${l.sig ? l.sig.last_date : '–'}</td>
+              <td style="font-size:11px;color:var(--text-sec)">${l.sig ? fmtFCFA(l.sig.target_30d) + ' F' : '–'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      <p class="conseil-warn" style="margin-top:8px">
+        ⚠ conflit = BL maintient une position que Prophet signale en VENTE/VENTE FORTE. Le pipeline actuel suit l'allocation BL ; à toi de décider si tu suis le signal individuel ou non. Montant op. : <span style="color:var(--down)">rouge = sortie de cash (achat/renforcement)</span>, <span style="color:var(--up)">vert = entrée de cash (vente/allègement)</span>.
+      </p>
+    `;
+}
+
+// ============================================================
+// Simulateur de rebalancement : Idéal J vs Cycle BRVM J+2
+// ============================================================
+function addBusinessDays(dateStr, n) {
+    const d = new Date(dateStr);
+    let added = 0;
+    while (added < n) {
+        d.setDate(d.getDate() + 1);
+        const dow = d.getDay();
+        if (dow !== 0 && dow !== 6) added++;
+    }
+    return d.toISOString().slice(0, 10);
+}
+
+function renderRebalSim(rows, feesRate, startDate) {
+    const el = document.getElementById('algo-rebal-sim');
+    if (!rows.length) { el.innerHTML = ''; return; }
+
+    // Initialise input rebal-date si vide
+    const rebalInput = document.getElementById('rebal-date');
+    if (rebalInput && !rebalInput.value) rebalInput.value = startDate;
+    const jDate = rebalInput ? rebalInput.value : startDate;
+    const j2Date = addBusinessDays(jDate, 2);
+    const todayStr = todayISO();
+    const j2Reached = j2Date <= todayStr;
+
+    const holdings = getHoldingsForTarget(rows);
+    const rowsByTicker = {};
+    rows.forEach(r => { rowsByTicker[r.ticker] = r; });
+    const allTickers = new Set(rows.map(r => r.ticker));
+    Object.keys(holdings).forEach(t => allTickers.add(t));
+
+    let ventesIdeal = 0, achatsIdeal = 0, feesIdeal = 0;
+    let ventesJ = 0, achatsJ2 = 0, feesJ_v = 0, feesJ2_a = 0, slippage = 0;
+    const lignes = [];
+
+    Array.from(allTickers).forEach(t => {
+        const r = rowsByTicker[t];
+        const targetNb = r ? r.nbActions : 0;
+        const currentNb = holdings[t] || 0;
+        const delta = targetNb - currentNb;
+        if (delta === 0) return;
+
+        const priceJ_obj = priceAtOrBefore(t, jDate);
+        const priceJ2_obj = priceAtOrBefore(t, j2Date);
+        const priceJ = priceJ_obj ? priceJ_obj.close : null;
+        const priceJ2 = priceJ2_obj ? priceJ2_obj.close : null;
+        if (!priceJ) return;
+
+        if (delta < 0) {
+            // VENTE : exécutée à J dans les deux scénarios
+            const nb = Math.abs(delta);
+            const montantJ = nb * priceJ;
+            const fee = montantJ * feesRate;
+            ventesIdeal += montantJ; feesIdeal += fee;
+            ventesJ += montantJ; feesJ_v += fee;
+            lignes.push({ t, sens: 'VENTE', nb, priceJ, priceJ2, montantJ, montantJ2: montantJ, slip: 0 });
+        } else {
+            // ACHAT : idéal à J, réel à J+2
+            const montantJ = delta * priceJ;
+            const feeI = montantJ * feesRate;
+            achatsIdeal += montantJ; feesIdeal += feeI;
+            const usedJ2price = priceJ2 || priceJ;
+            const montantJ2 = delta * usedJ2price;
+            const feeR = montantJ2 * feesRate;
+            achatsJ2 += montantJ2; feesJ2_a += feeR;
+            slippage += (montantJ2 - montantJ);
+            lignes.push({ t, sens: 'ACHAT', nb: delta, priceJ, priceJ2: usedJ2price, montantJ, montantJ2, slip: montantJ2 - montantJ });
+        }
+    });
+
+    const cashApresVentesIdeal = ventesIdeal;
+    const cashApresVentesReel = ventesJ;  // disponible seulement à J+2
+    const besoinAchatsIdeal = achatsIdeal + feesIdeal;
+    const besoinAchatsReel = achatsJ2 + feesJ2_a;
+    const deficitIdeal = besoinAchatsIdeal - cashApresVentesIdeal;
+    const deficitReel = besoinAchatsReel - cashApresVentesReel;
+
+    el.innerHTML = `
+      <div class="info-grid" style="margin-bottom:10px">
+        <div class="info-card" style="background:var(--bg-sec)">
+          <h3>Scénario IDÉAL · ${fmtDate(jDate)} (J)</h3>
+          <div class="kv"><span class="k">Ventes (cash entrant)</span><span class="v up">+${fmtFCFA(cashApresVentesIdeal)} F</span></div>
+          <div class="kv"><span class="k">Achats (cash sortant)</span><span class="v down">-${fmtFCFA(achatsIdeal)} F</span></div>
+          <div class="kv"><span class="k">Frais courtage</span><span class="v">${fmtFCFA(feesIdeal)} F</span></div>
+          <div class="kv"><span class="k">Cash net requis</span><span class="v ${deficitIdeal > 0 ? 'down' : 'up'}">${deficitIdeal > 0 ? fmtFCFA(deficitIdeal) + ' F manquant' : 'Auto-financé'}</span></div>
+        </div>
+        <div class="info-card" style="background:var(--bg-sec)">
+          <h3>Scénario RÉEL · Ventes J ${fmtDate(jDate)} → Achats J+2 ${fmtDate(j2Date)} ${!j2Reached ? '<span style="font-size:10px;color:var(--text-sec);font-style:italic">(futur — prix J non encore observé)</span>' : ''}</h3>
+          <div class="kv"><span class="k">Cash dispo à J+2 (vs ventes J)</span><span class="v up">+${fmtFCFA(cashApresVentesReel)} F</span></div>
+          <div class="kv"><span class="k">Achats au prix J+2</span><span class="v down">-${fmtFCFA(achatsJ2)} F</span></div>
+          <div class="kv"><span class="k">Frais courtage</span><span class="v">${fmtFCFA(feesJ_v + feesJ2_a)} F</span></div>
+          <div class="kv"><span class="k">Slippage (J → J+2)</span><span class="v ${slippage > 0 ? 'down' : 'up'}">${slippage >= 0 ? '+' : ''}${fmtFCFA(slippage)} F</span></div>
+          <div class="kv"><span class="k">Cash net requis</span><span class="v ${deficitReel > 0 ? 'down' : 'up'}">${deficitReel > 0 ? fmtFCFA(deficitReel) + ' F manquant' : 'Auto-financé'}</span></div>
+        </div>
+      </div>
+      ${lignes.length ? `
+      <div style="overflow-x:auto">
+        <table class="fond-table" style="font-size:12px">
+          <thead><tr>
+            <th>Ticker</th><th>Sens</th>
+            <th style="text-align:right">Nb</th>
+            <th style="text-align:right">Prix J</th>
+            <th style="text-align:right">Prix J+2</th>
+            <th style="text-align:right">Montant J</th>
+            <th style="text-align:right">Montant J+2</th>
+            <th style="text-align:right">Slippage</th>
+          </tr></thead>
+          <tbody>
+            ${lignes.map(l => `<tr>
+              <td style="font-weight:600">${l.t.replace('_', ' ').toUpperCase()}</td>
+              <td><span class="sig-badge ${l.sens === 'VENTE' ? 'sig-vente' : 'sig-achat'}">${l.sens}</span></td>
+              <td style="text-align:right">${l.nb}</td>
+              <td style="text-align:right">${fmtFCFA(l.priceJ)}</td>
+              <td style="text-align:right">${fmtFCFA(l.priceJ2)}</td>
+              <td style="text-align:right">${fmtFCFA(l.montantJ)}</td>
+              <td style="text-align:right">${fmtFCFA(l.montantJ2)}</td>
+              <td style="text-align:right;color:${l.slip > 0 ? 'var(--down)' : (l.slip < 0 ? 'var(--up)' : 'var(--text-sec)')};font-weight:600">${l.slip === 0 ? '–' : ((l.slip >= 0 ? '+' : '') + fmtFCFA(l.slip))}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <p class="conseil-warn" style="margin-top:6px">
+        💡 <strong>Mécanique pratique :</strong> à J vous passez vos ordres de vente. Le cash de ces ventes n'est disponible qu'à J+2 (règlement-livraison BRVM). Si <em>Cash net requis</em> = 'manquant', il faut soit ajouter du cash externe, soit espacer les achats sur plusieurs sessions. Le <em>slippage</em> mesure l'écart de prix entre J et J+2 — c'est un coût implicite de la latence de règlement.
+      </p>` : '<div style="color:var(--text-sec);font-size:13px;padding:8px">Aucun ordre à passer — le portefeuille actuel correspond à la cible.</div>'}
+    `;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MOTEUR DE BACKTEST CONFIGURABLE
+// ═══════════════════════════════════════════════════════════════════════════
+
+function btSignalFromRSI(rsiVal, af, a, v, vf) {
+  if (rsiVal === null || isNaN(rsiVal)) return 'NEUTRE';
+  if (rsiVal < af) return 'ACHAT FORT';
+  if (rsiVal < a)  return 'ACHAT';
+  if (rsiVal > vf) return 'VENTE FORTE';
+  if (rsiVal > v)  return 'VENTE';
+  return 'NEUTRE';
+}
+
+function btSignalFromMACD(h, hPrev) {
+  if (h === null || isNaN(h)) return 'NEUTRE';
+  const rising = h > (hPrev ?? 0);
+  if (h > 0 && rising)  return 'ACHAT FORT';
+  if (h > 0)            return 'ACHAT';
+  if (h < 0 && !rising) return 'VENTE FORTE';
+  if (h < 0)            return 'VENTE';
+  return 'NEUTRE';
+}
+
+function btCombineSignals(s1, s2) {
+  const m = { 'ACHAT FORT': 2, 'ACHAT': 1, 'NEUTRE': 0, 'VENTE': -1, 'VENTE FORTE': -2 };
+  const r = { 2:'ACHAT FORT', 1:'ACHAT', 0:'NEUTRE', '-1':'VENTE', '-2':'VENTE FORTE' };
+  return r[String(Math.round((m[s1] + m[s2]) / 2))] || 'NEUTRE';
+}
+
+// Recherche dichotomique : indice du dernier élément rows[i].Date <= d
+function btBsearch(rows, d) {
+  let lo = 0, hi = rows.length - 1, res = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (rows[mid].Date <= d) { res = mid; lo = mid + 1; } else hi = mid - 1;
+  }
+  return res;
+}
+
+async function runBtBacktest() {
+  const resultEl = document.getElementById('backtest-result');
+  const metricsEl = document.getElementById('backtest-metrics');
+  resultEl.style.display = 'block';
+  metricsEl.innerHTML = '<div class="loading"><span class="spinner"></span>Calcul en cours…</div>';
+  document.getElementById('bt-trades-section').innerHTML = '';
+
+  // ── Lire les paramètres ──────────────────────────────────────────────
+  const capital      = parseFloat(document.getElementById('bt-capital').value)      || 1000000;
+  const feesRate     = (parseFloat(document.getElementById('bt-fees').value)        || 1) / 100;
+  const durationYrs  = parseInt(document.getElementById('bt-years').value)          || 10;
+  const rebalMonths  = parseInt(document.getElementById('bt-freq').value)           || 1;
+  const pctAF        = (parseFloat(document.getElementById('bt-pct-af').value)      || 100) / 100;
+  const pctA         = (parseFloat(document.getElementById('bt-pct-a').value)       || 50)  / 100;
+  const pctV         = (parseFloat(document.getElementById('bt-pct-v').value)       || 50)  / 100;
+  const pctVF        = (parseFloat(document.getElementById('bt-pct-vf').value)      || 100) / 100;
+  const maxPosPct    = (parseFloat(document.getElementById('bt-max-pos').value)     || 25)  / 100;
+  const cashResPct   = (parseFloat(document.getElementById('bt-cash-reserve').value)|| 5)   / 100;
+  const sigSrc       = document.getElementById('bt-signal-src').value;
+  const rsiAF        = parseFloat(document.getElementById('bt-rsi-af').value) || 25;
+  const rsiA         = parseFloat(document.getElementById('bt-rsi-a').value)  || 40;
+  const rsiV         = parseFloat(document.getElementById('bt-rsi-v').value)  || 60;
+  const rsiVF        = parseFloat(document.getElementById('bt-rsi-vf').value) || 75;
+  const universe     = document.querySelector('input[name="bt-universe"]:checked').value;
+
+  // ── Sélection des actifs ─────────────────────────────────────────────
+  let tickers;
+  if (universe === 'all') {
+    tickers = TICKERS;
+  } else {
+    const alloc = ALGO_DATA.allocation || {};
+    tickers = Object.keys(alloc).length
+      ? Object.keys(alloc).sort((a, b) => (alloc[b] || 0) - (alloc[a] || 0))
+      : TICKERS.slice(0, 15);
+  }
+
+  // ── Charger les prix ─────────────────────────────────────────────────
+  const priceMap = {};
+  await Promise.all(tickers.map(async t => {
+    try {
+      const txt = await get(`${BASE}/actions/${t}_historique.csv`);
+      priceMap[t] = parseCSV(txt)
+        .filter(r => parseFloat(r.Cloture) > 0)
+        .sort((a, b) => a.Date.localeCompare(b.Date));
+    } catch { priceMap[t] = []; }
+  }));
+  await ensureBRVMC();
+
+  // ── Plage de dates ───────────────────────────────────────────────────
+  const today = todayISO();
+  const startDt = new Date(today);
+  startDt.setFullYear(startDt.getFullYear() - durationYrs);
+  const startISO = startDt.toISOString().slice(0, 10);
+
+  const allDatesSet = new Set();
+  tickers.forEach(t => priceMap[t].forEach(r => { if (r.Date >= startISO) allDatesSet.add(r.Date); }));
+  BRVMC_PRICES.forEach(p => { if (p.date >= startISO) allDatesSet.add(p.date); });
+  const allDates = Array.from(allDatesSet).sort();
+
+  if (allDates.length < 2) {
+    metricsEl.innerHTML = '<div class="err-box">Pas assez de données pour cette durée. Réduisez la durée ou changez l\'univers.</div>';
+    return;
+  }
+
+  // ── Dates de rebalancement (premier jour ouvré de chaque période) ────
+  const rebalDates = [];
+  let lastPeriodKey = '';
+  allDates.forEach(d => {
+    const dt = new Date(d);
+    let key;
+    if (rebalMonths === 1) key = d.slice(0, 7);
+    else { key = `${dt.getFullYear()}-${Math.floor(dt.getMonth() / rebalMonths)}`; }
+    if (key !== lastPeriodKey) { rebalDates.push(d); lastPeriodKey = key; }
+  });
+
+  // ── Précalcul des indicateurs sur l'historique complet ───────────────
+  const rsiIdx  = {}; // ticker -> Float64Array de valeurs RSI indexées par position dans priceMap[t]
+  const macdIdx = {}; // ticker -> { histo[], prev[] }
+  tickers.forEach(t => {
+    const rows = priceMap[t];
+    const closes = rows.map(r => parseFloat(r.Cloture));
+    rsiIdx[t]  = calcRSI(closes).values;       // même longueur que rows
+    macdIdx[t] = calcMACD(closes).histogram;   // même longueur que rows
+  });
+
+  // Récupérer le signal pour un ticker à une date
+  function getSignal(t, d) {
+    const rows = priceMap[t];
+    const idx  = btBsearch(rows, d);
+    if (idx < 0) return 'NEUTRE';
+    const rsiVal  = rsiIdx[t][idx] ?? null;
+    const macdH   = macdIdx[t][idx] ?? null;
+    const macdP   = idx > 0 ? (macdIdx[t][idx - 1] ?? null) : null;
+    if (sigSrc === 'rsi')      return btSignalFromRSI(rsiVal, rsiAF, rsiA, rsiV, rsiVF);
+    if (sigSrc === 'macd')     return btSignalFromMACD(macdH, macdP);
+    return btCombineSignals(
+      btSignalFromRSI(rsiVal, rsiAF, rsiA, rsiV, rsiVF),
+      btSignalFromMACD(macdH, macdP)
+    );
+  }
+
+  function priceAt(t, d) {
+    const rows = priceMap[t];
+    const idx = btBsearch(rows, d);
+    return idx >= 0 ? parseFloat(rows[idx].Cloture) : null;
+  }
+
+  // ── Simulation ───────────────────────────────────────────────────────
+  const budgetPerTicker = capital / tickers.length;
+  const cashReserve     = capital * cashResPct;
+  let cash = capital;
+  const positions = {};
+  tickers.forEach(t => { positions[t] = 0; });
+
+  const algoValues = [];
+  const bhPositions = {};
+  let bhDone = false;
+  const trades = [];
+  let nbTrades = 0;
+
+  rebalDates.forEach(d => {
+    // Initialiser Buy & Hold au premier rebalancement
+    if (!bhDone) {
+      tickers.forEach(t => {
+        const p = priceAt(t, d);
+        bhPositions[t] = p ? Math.floor(budgetPerTicker / p) : 0;
+      });
+      bhDone = true;
+    }
+
+    tickers.forEach(t => {
+      const sig   = getSignal(t, d);
+      const price = priceAt(t, d);
+      if (!price) return;
+
+      const availCash    = cash - cashReserve;
+      const maxInvest    = capital * maxPosPct;
+      const currentValue = positions[t] * price;
+
+      if (sig === 'ACHAT FORT' || sig === 'ACHAT') {
+        const pct         = sig === 'ACHAT FORT' ? pctAF : pctA;
+        const wantInvest  = Math.min(budgetPerTicker * pct, Math.max(0, maxInvest - currentValue), availCash);
+        if (wantInvest >= price) {
+          const nb   = Math.ceil(wantInvest / price);
+          const cost = nb * price * (1 + feesRate);
+          if (cost <= availCash) {
+            positions[t] += nb;
+            cash -= cost;
+            nbTrades++;
+            if (trades.length < 200) trades.push({ d, t, sig, nb, price, dir: 'A' });
+          }
+        }
+      } else if (sig === 'VENTE' || sig === 'VENTE FORTE') {
+        const pct    = sig === 'VENTE FORTE' ? pctVF : pctV;
+        const nb     = Math.min(Math.ceil(positions[t] * pct), positions[t]);
+        if (nb > 0) {
+          cash += nb * price * (1 - feesRate);
+          positions[t] -= nb;
+          nbTrades++;
+          if (trades.length < 200) trades.push({ d, t, sig, nb, price, dir: 'V' });
+        }
+      }
+    });
+
+    let val = cash;
+    tickers.forEach(t => { const p = priceAt(t, d); if (p) val += positions[t] * p; });
+    algoValues.push({ date: d, value: val });
+  });
+
+  // ── Buy & Hold (répartition équipondérée figée à J0) ────────────────
+  const bhValues = rebalDates.map(d => {
+    let v = 0;
+    tickers.forEach(t => { const p = priceAt(t, d); if (p) v += (bhPositions[t] || 0) * p; });
+    return { date: d, value: v };
+  });
+  const bhInitial = bhValues[0]?.value || capital;
+
+  // ── BRVM Composite mis à l'échelle ──────────────────────────────────
+  const brvmcRef = brvmcAtOrBefore(rebalDates[0]);
+  const brvmcValues = brvmcRef ? rebalDates.map(d => {
+    const p = brvmcAtOrBefore(d);
+    return { date: d, value: p ? capital * (p.close / brvmcRef.close) : null };
+  }) : null;
+
+  // ── Métriques ────────────────────────────────────────────────────────
+  const algoInitial = algoValues[0]?.value || capital;
+  const algoFinal   = algoValues[algoValues.length - 1]?.value || capital;
+  const bhFinal     = bhValues[bhValues.length - 1]?.value || bhInitial;
+  const brvmcFinal  = brvmcValues ? brvmcValues[brvmcValues.length - 1]?.value : null;
+
+  const algoRet  = (algoFinal - algoInitial) / algoInitial * 100;
+  const bhRet    = (bhFinal - bhInitial) / bhInitial * 100;
+  const brvmcRet = brvmcFinal ? (brvmcFinal - capital) / capital * 100 : null;
+
+  const nYears  = Math.max(0.01, (new Date(rebalDates[rebalDates.length - 1]) - new Date(rebalDates[0])) / (365.25 * 86400000));
+  const algoAnn = (Math.pow(algoFinal / algoInitial, 1 / nYears) - 1) * 100;
+  const bhAnn   = (Math.pow(bhFinal   / bhInitial,   1 / nYears) - 1) * 100;
+
+  // Sharpe (rendements périodiques)
+  const rets = [];
+  for (let i = 1; i < algoValues.length; i++) {
+    rets.push((algoValues[i].value - algoValues[i-1].value) / algoValues[i-1].value);
+  }
+  const meanR = rets.reduce((s, v) => s + v, 0) / (rets.length || 1);
+  const stdR  = Math.sqrt(rets.reduce((s, v) => s + (v - meanR) ** 2, 0) / (rets.length || 1));
+  const periodsPerYear = 12 / rebalMonths;
+  const sharpe = stdR > 0 ? (meanR * periodsPerYear) / (stdR * Math.sqrt(periodsPerYear)) : 0;
+
+  // Max Drawdown
+  let peak = algoInitial, maxDD = 0;
+  algoValues.forEach(({ value }) => {
+    if (value > peak) peak = value;
+    maxDD = Math.max(maxDD, (peak - value) / peak);
+  });
+
+  const fmt = (v, cls = '') => `<span class="${v >= 0 ? 'up' : 'down'}">${v >= 0 ? '+' : ''}${v.toFixed(2)}%</span>`;
+
+  metricsEl.innerHTML = `
+    <div class="metric"><div class="lbl">Stratégie — Perf. totale</div><div class="val ${algoRet>=0?'up':'down'}">${algoRet>=0?'+':''}${algoRet.toFixed(1)}%</div><div class="sub">${fmtDate(rebalDates[0])} → ${fmtDate(rebalDates[rebalDates.length-1])}</div></div>
+    <div class="metric"><div class="lbl">Rendement annualisé</div><div class="val ${algoAnn>=0?'up':'down'}">${algoAnn>=0?'+':''}${algoAnn.toFixed(2)}%</div><div class="sub">sur ${nYears.toFixed(1)} ans</div></div>
+    <div class="metric"><div class="lbl">Buy &amp; Hold total</div><div class="val ${bhRet>=0?'up':'down'}">${bhRet>=0?'+':''}${bhRet.toFixed(1)}%</div><div class="sub">Ann. ${bhAnn>=0?'+':''}${bhAnn.toFixed(2)}%</div></div>
+    ${brvmcRet!==null?`<div class="metric"><div class="lbl">BRVM Composite</div><div class="val ${brvmcRet>=0?'up':'down'}">${brvmcRet>=0?'+':''}${brvmcRet.toFixed(1)}%</div><div class="sub">α Strat. ${(algoRet-brvmcRet)>=0?'+':''}${(algoRet-brvmcRet).toFixed(1)}%</div></div>`:''}
+    <div class="metric"><div class="lbl">Alpha vs B&amp;H</div><div class="val ${(algoRet-bhRet)>=0?'up':'down'}">${(algoRet-bhRet)>=0?'+':''}${(algoRet-bhRet).toFixed(1)}%</div></div>
+    <div class="metric"><div class="lbl">Sharpe Ratio</div><div class="val ${sharpe>=1?'up':sharpe>=0?'':'down'}">${sharpe.toFixed(2)}</div><div class="sub">&gt;1 = bon, &gt;2 = excellent</div></div>
+    <div class="metric"><div class="lbl">Max Drawdown</div><div class="val down">−${(maxDD*100).toFixed(1)}%</div></div>
+    <div class="metric"><div class="lbl">Nb transactions</div><div class="val">${nbTrades}</div><div class="sub">${(nbTrades/nYears).toFixed(0)}/an</div></div>
+    <div class="metric"><div class="lbl">Valeur finale</div><div class="val" style="font-size:14px">${fmtFCFA(algoFinal)} F</div></div>
+  `;
+
+  // ── Graphique Base 100 ────────────────────────────────────────────────
+  const toBase100_algo = v => v / algoInitial * 100;
+  const toBase100_bh   = v => v / bhInitial   * 100;
+  const c = chartColors();
+  if (chartBacktest) chartBacktest.destroy();
+  const ctx = document.getElementById('chart-backtest').getContext('2d');
+  const datasets = [
+    { label: 'Stratégie signaux', data: algoValues.map(x => toBase100_algo(x.value)), borderColor: '#185FA5', backgroundColor: 'rgba(24,95,165,0.07)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.2 },
+    { label: 'Buy & Hold', data: bhValues.map(x => toBase100_bh(x.value)), borderColor: '#F59E0B', borderWidth: 1.5, borderDash: [5, 3], pointRadius: 0, fill: false, tension: 0.2 },
+  ];
+  if (brvmcValues) datasets.push({ label: 'BRVM Composite', data: brvmcValues.map(x => x.value ? toBase100_algo(x.value) : null), borderColor: '#1D9E75', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 });
+  datasets.push({ label: 'Base 100', data: rebalDates.map(() => 100), borderColor: '#888', borderWidth: 1, borderDash: [3, 3], pointRadius: 0, fill: false });
+
+  chartBacktest = new Chart(ctx, {
+    type: 'line',
+    data: { labels: rebalDates, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: true, position: 'top', labels: { color: c.text, font: { size: 11 }, boxWidth: 14 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1) : '–'}` } }
+      },
+      scales: {
+        x: { ticks: { maxTicksLimit: 10, color: c.text, font: { size: 11 } }, grid: { display: false } },
+        y: { ticks: { color: c.text, font: { size: 11 } }, grid: { color: c.grid } }
+      }
+    }
+  });
+
+  // ── Derniers trades ───────────────────────────────────────────────────
+  const tradesEl = document.getElementById('bt-trades-section');
+  const display  = trades.slice(-50).reverse();
+  if (display.length) {
+    tradesEl.innerHTML = `
+      <div class="info-card">
+        <h3>Derniers ordres simulés — ${display.length} affichés sur ${nbTrades} total</h3>
+        <div style="overflow-x:auto">
+          <table class="fond-table" style="font-size:12px">
+            <thead><tr>
+              <th>Date</th><th>Actif</th><th>Signal</th><th>Sens</th>
+              <th style="text-align:right">Nb actions</th>
+              <th style="text-align:right">Prix unit.</th>
+              <th style="text-align:right">Montant</th>
+            </tr></thead>
+            <tbody>
+              ${display.map(tr => `<tr>
+                <td style="font-family:'Courier New',monospace;font-size:11px">${tr.d}</td>
+                <td style="font-weight:700">${tr.t.replace('_',' ').toUpperCase()}</td>
+                <td><span class="sig-badge sig-${tr.sig.toLowerCase().replace(' ','-')}">${tr.sig}</span></td>
+                <td style="font-weight:700;color:${tr.dir==='A'?'var(--up)':'var(--down)'}">${tr.dir==='A'?'ACHAT':'VENTE'}</td>
+                <td style="text-align:right">${tr.nb}</td>
+                <td style="text-align:right">${fmtFCFA(tr.price)} F</td>
+                <td style="text-align:right;font-weight:700">${fmtFCFA(tr.nb*tr.price)} F</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+}
+
+function showTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'societe') loadSociete();
+  if (name === 'fondamentaux') loadFondamentaux();
+  if (name === 'analyse') loadAnalyse('portfolio');
+  if (name === 'signals') loadSignals();
+  if (name === 'sighist') loadSigHist();
+  if (name === 'algo') loadAlgo();
+}
+
+function setPeriod(btn, p) {
+  period = p;
+  document.querySelectorAll('.pbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadAction();
+}
+
+function isDark() { return matchMedia('(prefers-color-scheme: dark)').matches; }
+function chartColors() {
+  return {
+    text: isDark() ? '#8a8a84' : '#6b6b67',
+    grid: isDark() ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)'
+  };
+}
+
+async function loadAction() {
+  const ticker = document.getElementById('sel-action').value;
+  const el = document.getElementById('action-metrics');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>Chargement...</div>';
+  try {
+    const text = await get(`${BASE}/actions/${ticker}_historique.csv`);
+    const rows = parseCSV(text);
+    const filtered = filterPeriod(rows);
+    if (!filtered.length) { el.innerHTML = '<div class="err-box">Pas de données pour cette période</div>'; return; }
+    const last = filtered[filtered.length - 1];
+    const prev = filtered[filtered.length - 2] || last;
+    const cl = parseFloat(last.Cloture);
+    const vr = last.Variation_Pct ? parseFloat(last.Variation_Pct) : ((cl - parseFloat(prev.Cloture)) / parseFloat(prev.Cloture) * 100);
+    const varPer = ((cl - parseFloat(filtered[0].Cloture)) / parseFloat(filtered[0].Cloture) * 100);
+    const vols = filtered.map(r => parseFloat(r.Volume_FCFA) || 0);
+    const avgVol = vols.reduce((a, b) => a + b, 0) / vols.length;
+    const highs = filtered.map(r => parseFloat(r.Plus_Haut) || 0);
+    const lows = filtered.filter(r => parseFloat(r.Plus_Bas) > 0).map(r => parseFloat(r.Plus_Bas));
+
+    // Indicateurs techniques sur l'historique complet (max 250 pts)
+    const allRows = filterPeriod.length ? rows : rows; // rows = historique complet
+    const allCloses = rows.map(r => parseFloat(r.Cloture)).filter(v => !isNaN(v) && v > 0);
+    const rsiObj  = calcRSI(allCloses);
+    const macdObj = calcMACD(allCloses);
+    const rsiVal  = rsiObj.current;
+    const rsiSc   = scoreRSI(rsiVal);
+    const macdSc  = scoreMACD(macdObj);
+
+    el.innerHTML = `
+      <div class="metric"><div class="lbl">Clôture</div><div class="val">${cl.toLocaleString('fr-FR')} F</div><div class="sub">${last.Date}</div></div>
+      <div class="metric"><div class="lbl">Variation (J)</div><div class="val ${vr >= 0 ? 'up' : 'down'}">${vr >= 0 ? '+' : ''}${vr.toFixed(2)}%</div></div>
+      <div class="metric"><div class="lbl">Perf. période</div><div class="val ${varPer >= 0 ? 'up' : 'down'}">${varPer >= 0 ? '+' : ''}${varPer.toFixed(2)}%</div></div>
+      <div class="metric"><div class="lbl">Plus haut</div><div class="val">${Math.max(...highs).toLocaleString('fr-FR')}</div></div>
+      <div class="metric"><div class="lbl">Plus bas</div><div class="val">${Math.min(...lows).toLocaleString('fr-FR')}</div></div>
+      <div class="metric"><div class="lbl">Vol. moy</div><div class="val" style="font-size:15px">${(avgVol / 1e6).toFixed(1)}M F</div></div>
+      <div class="metric"><div class="lbl">RSI(14)</div><div class="val ${rsiSc.cls}" style="font-size:15px">${rsiVal !== null ? rsiVal.toFixed(1) : '–'}</div><div class="sub ${rsiSc.cls}">${rsiSc.label.split('—')[1]?.trim() || ''}</div></div>
+      <div class="metric"><div class="lbl">MACD</div><div class="val ${macdSc.cls}" style="font-size:15px">${macdObj.current !== null ? (macdObj.bullish ? '▲' : '▼') : '–'}</div><div class="sub ${macdSc.cls}">${macdSc.label.split('—')[1]?.trim() || ''}</div></div>
+    `;
+    drawActionChart(filtered, ticker);
+  } catch (e) { el.innerHTML = `<div class="err-box">${e.message}</div>`; }
+}
+
+function drawActionChart(rows, ticker) {
+  const ctx = document.getElementById('chart-action').getContext('2d');
+  if (chartAction) chartAction.destroy();
+  const c = chartColors();
+  chartAction = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: rows.map(r => r.Date),
+      datasets: [{ label: ticker, data: rows.map(r => parseFloat(r.Cloture)), borderColor: '#185FA5', backgroundColor: 'rgba(24,95,165,0.07)', borderWidth: 1.5, pointRadius: rows.length > 100 ? 0 : 2, fill: true, tension: 0.2 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { maxTicksLimit: 8, color: c.text, font: { size: 11 } }, grid: { display: false } },
+        y: { ticks: { color: c.text, font: { size: 11 }, callback: v => v.toLocaleString('fr-FR') }, grid: { color: c.grid } }
+      }
+    }
+  });
+}
+
+async function loadIndices() {
+  const container = document.getElementById('indices-cards');
+  const results = await Promise.all(INDICES.map(async idx => {
+    try {
+      const [csvText, infoText] = await Promise.all([
+        get(`${BASE}/indices/${idx}_historique.csv`),
+        get(`${BASE}/indices/${idx}_info.json`)
+      ]);
+      const rows = parseCSV(csvText);
+      const info = JSON.parse(infoText);
+      const last = rows[rows.length - 1];
+      const prev = rows[rows.length - 2] || last;
+      const cl = parseFloat(last.Cloture);
+      const vr = last.Variation_Pct ? parseFloat(last.Variation_Pct) : ((cl - parseFloat(prev.Cloture)) / parseFloat(prev.Cloture) * 100);
+      return { sym: idx, name: info.Name || idx, cloture: cl, variation: vr, rows };
+    } catch { return null; }
+  }));
+  allIndices = results.filter(Boolean);
+  if (!allIndices.length) { container.innerHTML = '<div class="err-box">Impossible de charger les indices</div>'; return; }
+  container.innerHTML = allIndices.map((d, i) => `
+    <div class="idx-card ${i === 0 ? 'selected' : ''}" onclick="selectIndice(${i},this)">
+      <div class="iname">${d.name}</div>
+      <div class="iprice">${d.cloture.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+      <div class="ivar ${d.variation >= 0 ? 'up' : 'down'}">${d.variation >= 0 ? '▲' : '▼'} ${Math.abs(d.variation).toFixed(2)}%</div>
+    </div>
+  `).join('');
+  drawIndiceChart(allIndices[0]);
+}
+
+function selectIndice(i, el) {
+  document.querySelectorAll('.idx-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  drawIndiceChart(allIndices[i]);
+}
+
+function drawIndiceChart(d) {
+  const ctx = document.getElementById('chart-indice').getContext('2d');
+  if (chartIndice) chartIndice.destroy();
+  const last180 = d.rows.slice(-180);
+  const c = chartColors();
+  chartIndice = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: last180.map(r => r.Date),
+      datasets: [{ label: d.name, data: last180.map(r => parseFloat(r.Cloture)), borderColor: '#1D9E75', backgroundColor: 'rgba(29,158,117,0.07)', borderWidth: 1.5, pointRadius: 0, fill: true, tension: 0.2 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { maxTicksLimit: 8, color: c.text, font: { size: 11 } }, grid: { display: false } },
+        y: { ticks: { color: c.text, font: { size: 11 }, callback: v => v.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) }, grid: { color: c.grid } }
+      }
+    }
+  });
+}
+
+function loadSignals() {
+  const el = document.getElementById('signals-content');
+  const sorted = Object.values(SIGNALS_DATA).sort((a, b) => {
+    const priority = { "ACHAT FORT": 0, "VENTE FORTE": 1, "ACHAT": 2, "VENTE": 3, "NEUTRE": 4 };
+    return priority[a.signal] - priority[b.signal];
+  });
+
+  el.innerHTML = `
+    <div style="overflow-x:auto">
+      <table class="sig-table">
+        <thead>
+          <tr>
+            <th>Valeur</th>
+            <th>Dernier Prix</th>
+            <th>Signal</th>
+            <th>Confiance</th>
+            <th>Cible (30j)</th>
+            <th>Tendance</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sorted.map(s => `
+            <tr>
+              <td style="font-weight:700">${s.ticker.replace('_', ' ').toUpperCase()}</td>
+              <td>${s.last_price.toLocaleString('fr-FR')} F</td>
+              <td><span class="sig-badge sig-${s.signal.toLowerCase().replace(' ', '-')}">${s.signal}</span></td>
+              <td>${s.confidence}</td>
+              <td style="font-weight:600">${s.target_30d.toLocaleString('fr-FR')} F</td>
+              <td class="${s.trend === 'UP' ? 'up' : 'down'}">${s.trend === 'UP' ? 'Haussière' : 'Baissière'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ── Historique des signaux ───────────────────────────────────────────────────
+const SIG_HM_CLASS = {
+  'ACHAT FORT': 'hm-af', 'ACHAT': 'hm-a', 'NEUTRE': 'hm-n',
+  'VENTE': 'hm-v', 'VENTE FORTE': 'hm-vf'
+};
+
+function sigHistTickers() {
+  // Tickers du portefeuille d'abord (ordre allocation décroissante), sinon tout l'historique.
+  const hist = SIGNALS_HISTORY.tickers || {};
+  const alloc = ALGO_DATA.allocation || {};
+  const inHist = Object.keys(hist);
+  const ordered = Object.keys(alloc)
+    .sort((a, b) => (alloc[b] || 0) - (alloc[a] || 0))
+    .filter(t => inHist.includes(t));
+  const rest = inHist.filter(t => !ordered.includes(t)).sort();
+  return [...ordered, ...rest];
+}
+
+function loadSigHist() {
+  const el = document.getElementById('sighist-content');
+  const hist = SIGNALS_HISTORY.tickers || {};
+  const tickers = sigHistTickers();
+  if (!tickers.length) {
+    el.innerHTML = `<div class="err-box">Aucun historique de signaux disponible. Lancez <code>python build_signals_history.py</code> puis poussez <code>data/signals/signals_history.json</code> sur GitHub.</div>`;
+    return;
+  }
+
+  // Union triée de toutes les dates.
+  const dateSet = new Set();
+  tickers.forEach(t => (hist[t] || []).forEach(r => dateSet.add(r.as_of)));
+  const dates = Array.from(dateSet).sort();
+
+  // Index rapide ticker -> { date -> record }.
+  const byTk = {};
+  tickers.forEach(t => {
+    byTk[t] = {};
+    (hist[t] || []).forEach(r => { byTk[t][r.as_of] = r; });
+  });
+
+  const fmtCol = d => { const [y, m] = d.split('-'); return `${m}/${y.slice(2)}`; };
+
+  const heat = `
+    <div class="info-card" style="margin-bottom:1.5rem">
+      <h3>Heatmap des signaux dans le temps</h3>
+      <p style="font-size:12px;color:var(--text-sec);margin-bottom:10px">Cliquez sur un actif pour afficher le détail prix vs cible. Survolez une cellule pour la valeur exacte.</p>
+      <div class="hm-wrap">
+        <table class="hm-table">
+          <thead>
+            <tr>
+              <th class="hm-tk">Actif</th>
+              ${dates.map(d => `<th class="hm-dt">${fmtCol(d)}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${tickers.map(t => `
+              <tr data-tk="${t}">
+                <td class="hm-tk" onclick="selectSigHist('${t}')">${t.replace('_', ' ').toUpperCase()}</td>
+                ${dates.map(d => {
+                  const r = byTk[t][d];
+                  if (!r) return `<td><span class="hm-cell hm-empty"></span></td>`;
+                  const cls = SIG_HM_CLASS[r.signal] || 'hm-n';
+                  const tip = `${t.replace('_', ' ').toUpperCase()} · ${d}\n${r.signal} (${r.change_pct >= 0 ? '+' : ''}${r.change_pct}%)\nPrix ${r.last_price.toLocaleString('fr-FR')} → cible ${r.target_30d.toLocaleString('fr-FR')}`;
+                  return `<td><span class="hm-cell ${cls}" title="${tip}"></span></td>`;
+                }).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <h3>Détail d'un actif — prix observé vs cible 30j</h3>
+      <div class="controls" style="margin-bottom:10px">
+        <select id="sel-sighist" onchange="selectSigHist(this.value)">
+          ${tickers.map(t => `<option value="${t}">${t.replace('_', ' ').toUpperCase()}</option>`).join('')}
+        </select>
+      </div>
+      <div id="sighist-detail-meta" class="metrics" style="margin-bottom:1rem"></div>
+      <div class="chart-wrap" style="height:340px"><canvas id="chart-sighist"></canvas></div>
+    </div>
+  `;
+  el.innerHTML = heat;
+  selectSigHist(tickers[0]);
+}
+
+function selectSigHist(ticker) {
+  const sel = document.getElementById('sel-sighist');
+  if (sel && sel.value !== ticker) sel.value = ticker;
+  document.querySelectorAll('#sighist-content tr[data-tk]').forEach(tr => {
+    tr.classList.toggle('hm-active', tr.getAttribute('data-tk') === ticker);
+  });
+  drawSigHistChart(ticker);
+}
+
+function drawSigHistChart(ticker) {
+  const ctx = document.getElementById('chart-sighist');
+  if (!ctx) return;
+  if (chartSigHist) chartSigHist.destroy();
+  const series = (SIGNALS_HISTORY.tickers || {})[ticker] || [];
+  const labels = series.map(r => r.as_of);
+  const prices = series.map(r => r.last_price);
+  const targets = series.map(r => r.target_30d);
+  const dotColors = series.map(r => {
+    const m = { 'ACHAT FORT': '#3B6D11', 'ACHAT': '#5FA8D3', 'NEUTRE': '#9CA3AF', 'VENTE': '#C44A48', 'VENTE FORTE': '#7F1D1D' };
+    return m[r.signal] || '#9CA3AF';
+  });
+
+  // Métadonnées de synthèse.
+  const meta = document.getElementById('sighist-detail-meta');
+  if (meta) {
+    const last = series[series.length - 1];
+    const counts = {};
+    series.forEach(r => { counts[r.signal] = (counts[r.signal] || 0) + 1; });
+    const dominant = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0] || '–';
+    const flips = series.reduce((n, r, i) => (i > 0 && r.signal !== series[i - 1].signal ? n + 1 : n), 0);
+    meta.innerHTML = last ? `
+      <div class="metric"><div class="lbl">Signal actuel</div><div class="val" style="font-size:15px"><span class="sig-badge sig-${last.signal.toLowerCase().replace(' ', '-')}">${last.signal}</span></div><div class="sub">${last.as_of}</div></div>
+      <div class="metric"><div class="lbl">Signal dominant</div><div class="val" style="font-size:15px">${dominant}</div><div class="sub">${series.length} relevés</div></div>
+      <div class="metric"><div class="lbl">Changements</div><div class="val" style="font-size:15px">${flips}</div><div class="sub">retournements de signal</div></div>
+      <div class="metric"><div class="lbl">Écart cible actuel</div><div class="val ${last.change_pct >= 0 ? 'up' : 'down'}" style="font-size:15px">${last.change_pct >= 0 ? '+' : ''}${last.change_pct}%</div><div class="sub">prix → cible 30j</div></div>
+    ` : '';
+  }
+
+  const c = chartColors();
+  chartSigHist = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Prix observé', data: prices, borderColor: '#185FA5', backgroundColor: 'rgba(24,95,165,0.08)', borderWidth: 2, fill: true, tension: 0.2,
+          pointRadius: 5, pointBackgroundColor: dotColors, pointBorderColor: dotColors },
+        { label: 'Cible 30j', data: targets, borderColor: '#F59E0B', borderWidth: 2, borderDash: [6, 3], pointRadius: 0, fill: false, tension: 0.2 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, labels: { color: c.text, font: { size: 11 }, boxWidth: 14 } },
+        tooltip: {
+          callbacks: {
+            afterBody: (items) => {
+              const r = series[items[0].dataIndex];
+              return r ? `Signal : ${r.signal} (${r.change_pct >= 0 ? '+' : ''}${r.change_pct}%)\nConfiance : ${r.confidence}` : '';
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { maxTicksLimit: 12, color: c.text, font: { size: 11 } }, grid: { display: false } },
+        y: { ticks: { color: c.text, font: { size: 11 }, callback: v => v.toLocaleString('fr-FR') }, grid: { color: c.grid } }
+      }
+    }
+  });
+}
+
+async function loadSociete() {
+  const ticker = document.getElementById('sel-societe').value;
+  const el = document.getElementById('societe-content');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>Chargement...</div>';
+  try {
+    const text = await get(`${BASE}/societes/${ticker}_societe.json`);
+    const d = JSON.parse(text);
+    const sect = (d.Secteur || '–').replace('BRVM - ', '');
+    el.innerHTML = `
+      <div class="societe-header">
+        <div class="snom">${d.Nom || ticker}</div>
+        <div class="ssub">${d.ticker || ''} · ${sect}</div>
+      </div>
+      <div class="info-grid">
+        <div class="info-card"><h3>Données de marché</h3>
+          ${kv('Valorisation', d.Valorisation || d['Valorisation de la société'] || '–')}
+          ${kv("Nb d'actions", d.Nombre_Actions || d['Nombre de titres'] || '–')}
+          ${kv('Flottant', d.Flottant_Pct || d.Flottant || '–')}
+          ${kv('BNPA', d.BNPA ? d.BNPA + ' FCFA' : '–')}
+          ${kv('PER', d.PER || '–')}
+          ${kv('Dividende', d.Dividende ? d.Dividende + ' FCFA' : '–')}
+        </div>
+        <div class="info-card"><h3>Résultats (MFCFA)</h3>
+          ${kv("Chiffre d'affaires", (d["Chiffre d'affaires"] || '–') + ' M')}
+          ${kv('Résultat net', (d['Résultat net'] || '–') + ' M')}
+          ${kv('ISIN', d.ISIN || '–')}
+          ${kv('Téléphone', d.Téléphone || '–')}
+          ${kv('Adresse', d.Adresse ? d.Adresse.substring(0, 45) + '…' : '–')}
+        </div>
+      </div>
+      ${d['La société'] ? `<div class="info-card" style="margin-top:1rem"><h3>À propos</h3><p style="font-size:13px;color:var(--text-sec);line-height:1.7">${d['La société'].substring(0, 520)}…</p></div>` : ''}
+      ${d.Conseil_Texte ? `<div class="info-card" style="margin-top:1rem"><h3>Conseil technique</h3><div class="conseil-box">${d.Conseil_Texte}</div><p class="conseil-warn">${(d.Conseil_Avertissement || '').substring(0, 180)}</p></div>` : ''}
+      ${d.Dirigeants ? `<div class="info-card" style="margin-top:1rem"><h3>Dirigeants</h3><p style="font-size:13px;color:var(--text-sec);line-height:1.7">${d.Dirigeants}</p></div>` : ''}
+    `;
+  } catch (e) { el.innerHTML = `<div class="err-box">${e.message}</div>`; }
+}
+
+function kv(k, v) {
+  return `<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>`;
+}
+
+async function loadFondamentaux() {
+  const ticker = document.getElementById('sel-fond').value;
+  const el = document.getElementById('fond-content');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>Chargement...</div>';
+  try {
+    const [fondTxt, societeTxt, priceTxt] = await Promise.all([
+      get(`${BASE}/fondamentaux/${ticker}_fondamentaux.json`),
+      get(`${BASE}/societes/${ticker}_societe.json`).catch(() => '{}'),
+      get(`${BASE}/actions/${ticker}_historique.csv`).catch(() => '')
+    ]);
+    const d = JSON.parse(fondTxt);
+    const soc = JSON.parse(societeTxt);
+    const priceRows = priceTxt ? parseCSV(priceTxt) : [];
+    const annees = d.annees || [];
+    const metrics = d.metrics || {};
+    const hasTech = priceRows.length >= 35;
+
+    const techHtml = hasTech ? renderTechAnalysis(priceRows, ticker, soc.PER || '') : '';
+
+    el.innerHTML = `
+      ${techHtml}
+      <div class="info-card">
+        <h3>Données fondamentales — ${ticker.replace('_', ' ').toUpperCase()}</h3>
+        <div style="overflow-x:auto">
+          <table class="fond-table">
+            <thead><tr><th>Indicateur</th>${annees.map(a => `<th style="text-align:right">${a}</th>`).join('')}</tr></thead>
+            <tbody>${Object.keys(metrics).map(m => {
+              const isGrowth = m.includes('Croissance');
+              return `<tr><td>${m}</td>${annees.map(a => {
+                const v = metrics[m]?.[a] || '–';
+                const n = parseFloat(v);
+                const cls = isGrowth && !isNaN(n) ? (n >= 0 ? 'pos' : 'neg') : '';
+                return `<td style="text-align:right" class="${cls}">${v}</td>`;
+              }).join('')}</tr>`;
+            }).join('')}</tbody>
+          </table>
+        </div>
+      </div>
+      <div style="margin-top:1.25rem">
+        <div class="legend">
+          <span><i style="background:#185FA5"></i>CA (MFCFA)</span>
+          <span><i style="background:#1D9E75"></i>Résultat net</span>
+        </div>
+        <div class="chart-wrap" style="height:200px"><canvas id="chart-fond" role="img" aria-label="CA et résultat net par année"></canvas></div>
+      </div>
+      ${hasTech ? `
+      <div class="info-card" style="margin-top:1.25rem">
+        <h3>Prix · MA20 · MA50 — 180 dernières séances</h3>
+        <div class="chart-wrap" style="height:300px"><canvas id="chart-tech-price"></canvas></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem">
+        <div class="info-card">
+          <h3>RSI(14) — Survente &lt; 30 · Surachat &gt; 70</h3>
+          <div class="chart-wrap-sm"><canvas id="chart-tech-rsi"></canvas></div>
+        </div>
+        <div class="info-card">
+          <h3>MACD (12/26/9) — Histogramme · Ligne · Signal</h3>
+          <div class="chart-wrap-sm"><canvas id="chart-tech-macd"></canvas></div>
+        </div>
+      </div>` : ''}
+    `;
+    drawFondChart(d);
+    if (hasTech) drawTechCharts(priceRows);
+  } catch (e) { el.innerHTML = `<div class="err-box">${e.message}</div>`; }
+}
+
+function drawFondChart(d) {
+  const ctx = document.getElementById('chart-fond');
+  if (!ctx) return;
+  const annees = d.annees || [];
+  const ca = annees.map(a => parseFloat((d.metrics["Chiffre d'affaires"]?.[a] || '0').replace(/\s/g, '')) || 0);
+  const rn = annees.map(a => parseFloat((d.metrics['Résultat net']?.[a] || '0').replace(/\s/g, '')) || 0);
+  const c = chartColors();
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: annees,
+      datasets: [
+        { label: 'CA', data: ca, backgroundColor: 'rgba(24,95,165,0.75)', borderRadius: 4 },
+        { label: 'RN', data: rn, backgroundColor: 'rgba(29,158,117,0.75)', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: c.text, font: { size: 11 } }, grid: { display: false } },
+        y: { ticks: { color: c.text, font: { size: 11 }, callback: v => v.toLocaleString('fr-FR') }, grid: { color: c.grid } }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ANALYSE TECHNIQUE & SCORING COMPOSITE
+// ═══════════════════════════════════════════════════════════════════════════
+
+let chartTechPrice = null, chartTechRSI = null, chartTechMACD = null;
+
+// ── Calculs d'indicateurs ───────────────────────────────────────────────────
+
+function calcEMA(vals, period) {
+  if (!vals || !vals.length) return [];
+  const k = 2 / (period + 1);
+  const ema = [vals[0]];
+  for (let i = 1; i < vals.length; i++) ema.push(vals[i] * k + ema[i - 1] * (1 - k));
+  return ema;
+}
+
+function calcRSI(closes, period = 14) {
+  if (closes.length < period + 1) return { values: [], current: null };
+  let ag = 0, al = 0;
+  for (let i = 1; i <= period; i++) {
+    const d = closes[i] - closes[i - 1];
+    if (d > 0) ag += d; else al -= d;
+  }
+  ag /= period; al /= period;
+  const vals = new Array(period).fill(null);
+  vals.push(100 - 100 / (1 + ag / Math.max(al, 1e-9)));
+  for (let i = period + 1; i < closes.length; i++) {
+    const d = closes[i] - closes[i - 1];
+    ag = (ag * (period - 1) + Math.max(d, 0)) / period;
+    al = (al * (period - 1) + Math.max(-d, 0)) / period;
+    vals.push(100 - 100 / (1 + ag / Math.max(al, 1e-9)));
+  }
+  return { values: vals, current: vals[vals.length - 1] };
+}
+
+function calcMACD(closes, fast = 12, slow = 26, sigPer = 9) {
+  if (closes.length < slow + sigPer) return { macdLine: [], signalLine: [], histogram: [], bullish: null, rising: null, current: null };
+  const emaFast = calcEMA(closes, fast);
+  const emaSlow = calcEMA(closes, slow);
+  const macdLine = emaFast.map((v, i) => v - emaSlow[i]);
+  const signalLine = calcEMA(macdLine, sigPer);
+  const histogram = macdLine.map((v, i) => v - signalLine[i]);
+  const cur = histogram[histogram.length - 1];
+  const prev = histogram[histogram.length - 2] ?? 0;
+  return { macdLine, signalLine, histogram, current: cur, bullish: cur > 0, rising: cur > prev };
+}
+
+function calcMA(closes, period) {
+  return closes.map((_, i) => {
+    if (i < period - 1) return null;
+    let s = 0;
+    for (let j = i - period + 1; j <= i; j++) s += closes[j];
+    return s / period;
+  });
+}
+
+// ── Fonctions de scoring ─────────────────────────────────────────────────────
+
+function scoreRSI(rsi) {
+  if (rsi === null || isNaN(rsi)) return { score: 0, label: 'RSI N/A', cls: '' };
+  if (rsi < 30) return { score: 2, label: `RSI ${rsi.toFixed(0)} — Survendu`, cls: 'up' };
+  if (rsi < 45) return { score: 1, label: `RSI ${rsi.toFixed(0)} — Zone achat`, cls: 'up' };
+  if (rsi < 55) return { score: 0, label: `RSI ${rsi.toFixed(0)} — Neutre`, cls: '' };
+  if (rsi < 70) return { score: -1, label: `RSI ${rsi.toFixed(0)} — Zone vente`, cls: 'down' };
+  return { score: -2, label: `RSI ${rsi.toFixed(0)} — Suracheté`, cls: 'down' };
+}
+
+function scoreMACD(macd) {
+  if (!macd || macd.bullish === null) return { score: 0, label: 'MACD N/A', cls: '' };
+  if (macd.bullish && macd.rising)   return { score: 2, label: 'MACD — Haussier ↑', cls: 'up' };
+  if (macd.bullish)                  return { score: 1, label: 'MACD — Positif', cls: 'up' };
+  if (!macd.bullish && macd.rising)  return { score: 0, label: 'MACD — Remontée', cls: '' };
+  return { score: -2, label: 'MACD — Baissier ↓', cls: 'down' };
+}
+
+function scoreTrend(closes, ma50vals) {
+  if (!closes.length || !ma50vals || !ma50vals.length) return { score: 0, label: 'Tendance N/A', cls: '' };
+  const validMA = ma50vals.filter(v => v !== null);
+  if (validMA.length < 2) return { score: 0, label: 'MA50 N/A', cls: '' };
+  const last = closes[closes.length - 1];
+  const ma = validMA[validMA.length - 1];
+  const maPrev = validMA[validMA.length - 2];
+  const pct = (last - ma) / ma * 100;
+  const maTrend = ma > maPrev ? 1 : -1;
+  if (pct > 3 && maTrend > 0)       return { score: 2, label: `Tendance +${pct.toFixed(1)}% ↗`, cls: 'up' };
+  if (pct > 0)                       return { score: 1, label: `Tendance +${pct.toFixed(1)}%`, cls: 'up' };
+  if (Math.abs(pct) <= 3)            return { score: 0, label: `Tendance ${pct.toFixed(1)}%`, cls: '' };
+  if (maTrend < 0)                   return { score: -2, label: `Tendance ${pct.toFixed(1)}% ↘`, cls: 'down' };
+  return { score: -1, label: `Tendance ${pct.toFixed(1)}%`, cls: 'down' };
+}
+
+function scoreLiq(volumes) {
+  if (!volumes.length) return { score: 0, label: 'Vol. N/A', cls: '' };
+  const avg = volumes.reduce((s, v) => s + v, 0) / volumes.length;
+  const m = avg / 1e6;
+  if (avg >= 5e6) return { score: 1, label: `Vol. ${m.toFixed(1)}M F — Liquide`, cls: 'up' };
+  if (avg >= 1e6) return { score: 0, label: `Vol. ${m.toFixed(1)}M F — Moyen`, cls: '' };
+  return { score: -1, label: `Vol. ${(avg / 1e3).toFixed(0)}K F — Illiquide`, cls: 'down' };
+}
+
+function scoreProphetTicker(ticker) {
+  const sig = SIGNALS_DATA[ticker];
+  if (!sig) return { score: 0, label: 'Prophet N/A', cls: '' };
+  const map = { 'ACHAT FORT': 3, 'ACHAT': 2, 'NEUTRE': 0, 'VENTE': -2, 'VENTE FORTE': -3 };
+  const s = map[sig.signal] ?? 0;
+  const pct = sig.last_price > 0 ? ((sig.target_30d - sig.last_price) / sig.last_price * 100) : 0;
+  const sign = pct >= 0 ? '+' : '';
+  return { score: s, label: `Prophet — ${sig.signal} (${sign}${pct.toFixed(1)}%)`, cls: s > 0 ? 'up' : (s < 0 ? 'down' : '') };
+}
+
+function scorePER(perRaw) {
+  const per = parseFloat(String(perRaw || '').replace(/[^\d.,]/g, '').replace(',', '.'));
+  if (!isFinite(per) || per <= 0) return { score: 0, label: 'PER N/A', cls: '' };
+  if (per < 8)  return { score: 2, label: `PER ${per.toFixed(1)}x — Décoté`, cls: 'up' };
+  if (per < 15) return { score: 1, label: `PER ${per.toFixed(1)}x — Raisonnable`, cls: 'up' };
+  if (per < 25) return { score: 0, label: `PER ${per.toFixed(1)}x — Correct`, cls: '' };
+  return { score: -1, label: `PER ${per.toFixed(1)}x — Cher`, cls: 'down' };
+}
+
+function verdictFromScore(total) {
+  if (total >= 8)  return { lbl: 'ACHETER IMPÉRATIVEMENT', cls: 'verdict-achat-fort' };
+  if (total >= 5)  return { lbl: 'ACHETER', cls: 'verdict-achat' };
+  if (total >= 2)  return { lbl: 'SURVEILLER', cls: 'verdict-surveiller' };
+  if (total >= -1) return { lbl: 'CONSERVER', cls: 'verdict-conserver' };
+  if (total >= -4) return { lbl: 'RÉDUIRE', cls: 'verdict-reduire' };
+  return { lbl: 'VENDRE', cls: 'verdict-vendre' };
+}
+
+// ── Calcul groupé des scores ─────────────────────────────────────────────────
+
+function buildScores(priceRows, ticker, perRaw) {
+  const validData = priceRows.slice(-250).filter(r => {
+    const c = parseFloat(r.Cloture); return !isNaN(c) && c > 0;
+  });
+  const closes = validData.map(r => parseFloat(r.Cloture));
+  const volumes = validData.map(r => parseFloat(r.Volume_FCFA) || parseFloat(r.Volume) || 0);
+  const ma50vals = calcMA(closes, 50);
+  const rsiObj = calcRSI(closes);
+  const macdObj = calcMACD(closes);
+  const sRSI     = scoreRSI(rsiObj.current);
+  const sMACD    = scoreMACD(macdObj);
+  const sTrend   = scoreTrend(closes, ma50vals);
+  const sLiq     = scoreLiq(volumes.slice(-60));
+  const sProphet = scoreProphetTicker(ticker);
+  const sPER     = scorePER(perRaw);
+  const total = sRSI.score + sMACD.score + sTrend.score + sLiq.score + sProphet.score + sPER.score;
+  const verdict = verdictFromScore(total);
+  return { sRSI, sMACD, sTrend, sLiq, sProphet, sPER, total, verdict, closes, volumes, ma50vals, rsiObj, macdObj };
+}
+
+// ── Rendu du bloc verdict (HTML string) ─────────────────────────────────────
+
+function renderTechAnalysis(priceRows, ticker, perRaw) {
+  const sc = buildScores(priceRows, ticker, perRaw);
+  const pct = ((sc.total + 11) / 22 * 100).toFixed(1);
+  const barColor = sc.total >= 5 ? 'var(--up)' : sc.total >= 2 ? 'var(--blue)' : sc.total >= -1 ? 'var(--text-sec)' : 'var(--down)';
+  const chips = [sc.sRSI, sc.sMACD, sc.sTrend, sc.sLiq, sc.sProphet, sc.sPER];
+  return `
+    <div class="verdict-card">
+      <div class="verdict-main">
+        <span class="verdict-badge ${sc.verdict.cls}">${sc.verdict.lbl}</span>
+        <span class="verdict-score">Score composite : <strong>${sc.total >= 0 ? '+' : ''}${sc.total}</strong> <span style="opacity:.5">/ 12</span></span>
+      </div>
+      <div class="score-bar-track">
+        <div class="score-bar-fill" style="width:${pct}%;background:${barColor}"></div>
+        <div class="score-bar-zero"></div>
+      </div>
+      <div class="tech-indicators">
+        ${chips.map(s => `
+          <div class="tech-chip ${s.cls}">
+            <span class="chip-score">${s.score >= 0 ? '+' : ''}${s.score}</span>
+            <span class="chip-label" style="color:var(--text-sec)">${s.label}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+// ── Graphiques techniques (Prix+MA, RSI, MACD) ───────────────────────────────
+
+function drawTechCharts(priceRows) {
+  const validData = priceRows.slice(-250).filter(r => {
+    const c = parseFloat(r.Cloture); return !isNaN(c) && c > 0;
+  });
+  const recent = validData.slice(-180);
+  const dates  = recent.map(r => r.Date);
+  const allC   = validData.map(r => parseFloat(r.Cloture));
+  const closes = recent.map(r => parseFloat(r.Cloture));
+
+  const ma20all = calcMA(allC, 20);
+  const ma50all = calcMA(allC, 50);
+  const rsiAll  = calcRSI(allC);
+  const macdAll = calcMACD(allC);
+
+  const ma20   = ma20all.slice(-180);
+  const ma50   = ma50all.slice(-180);
+  const rsiV   = rsiAll.values.slice(-180);
+  const histo  = macdAll.histogram.slice(-180);
+  const mLine  = macdAll.macdLine.slice(-180);
+  const sLine  = macdAll.signalLine.slice(-180);
+
+  const c = chartColors();
+
+  // Prix + MA
+  const pCtx = document.getElementById('chart-tech-price');
+  if (pCtx) {
+    if (chartTechPrice) chartTechPrice.destroy();
+    chartTechPrice = new Chart(pCtx, {
+      type: 'line',
+      data: { labels: dates, datasets: [
+        { label: 'Prix',  data: closes, borderColor: '#185FA5', backgroundColor: 'rgba(24,95,165,0.06)', borderWidth: 1.5, pointRadius: 0, fill: true,  tension: 0.2 },
+        { label: 'MA20',  data: ma20,   borderColor: '#F59E0B', borderWidth: 1.5, borderDash: [5,3], pointRadius: 0, fill: false, tension: 0.2 },
+        { label: 'MA50',  data: ma50,   borderColor: '#1D9E75', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 },
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: true, position: 'top', labels: { color: c.text, font: { size: 10 }, boxWidth: 12 } } },
+        scales: {
+          x: { ticks: { maxTicksLimit: 8, color: c.text, font: { size: 10 } }, grid: { display: false } },
+          y: { ticks: { color: c.text, font: { size: 10 }, callback: v => v.toLocaleString('fr-FR') }, grid: { color: c.grid } }
+        }
+      }
+    });
+  }
+
+  // RSI
+  const rCtx = document.getElementById('chart-tech-rsi');
+  if (rCtx) {
+    if (chartTechRSI) chartTechRSI.destroy();
+    chartTechRSI = new Chart(rCtx, {
+      type: 'line',
+      data: { labels: dates, datasets: [
+        { label: 'RSI(14)', data: rsiV, borderColor: '#8B5CF6', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.2 },
+        { label: '30',      data: dates.map(() => 30), borderColor: 'rgba(29,158,117,0.5)', borderWidth: 1, borderDash: [4,4], pointRadius: 0, fill: false },
+        { label: '70',      data: dates.map(() => 70), borderColor: 'rgba(226,75,74,0.5)',  borderWidth: 1, borderDash: [4,4], pointRadius: 0, fill: false },
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` RSI: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1) : '–'}` } } },
+        scales: {
+          x: { ticks: { maxTicksLimit: 6, color: c.text, font: { size: 10 } }, grid: { display: false } },
+          y: { min: 0, max: 100, ticks: { color: c.text, font: { size: 10 }, stepSize: 25 }, grid: { color: c.grid } }
+        }
+      }
+    });
+  }
+
+  // MACD
+  const mCtx = document.getElementById('chart-tech-macd');
+  if (mCtx) {
+    if (chartTechMACD) chartTechMACD.destroy();
+    chartTechMACD = new Chart(mCtx, {
+      type: 'bar',
+      data: { labels: dates, datasets: [
+        { label: 'Histo', data: histo, backgroundColor: histo.map(v => v >= 0 ? 'rgba(29,158,117,0.7)' : 'rgba(226,75,74,0.7)'), borderWidth: 0, order: 2 },
+        { label: 'MACD',  data: mLine, borderColor: '#185FA5', borderWidth: 1.5, pointRadius: 0, type: 'line', fill: false, tension: 0.2, order: 1 },
+        { label: 'Signal',data: sLine, borderColor: '#F59E0B', borderWidth: 1.5, borderDash: [4,3], pointRadius: 0, type: 'line', fill: false, tension: 0.2, order: 0 },
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { maxTicksLimit: 6, color: c.text, font: { size: 10 } }, grid: { display: false } },
+          y: { ticks: { color: c.text, font: { size: 10 } }, grid: { color: c.grid } }
+        }
+      }
+    });
+  }
+}
+
+// ── Screening tab ──────────────────────────────────────────────────────────
+
+function goToFond(ticker) {
+  const btn = Array.from(document.querySelectorAll('nav.tabs button')).find(b => b.textContent.includes('Fondamentaux'));
+  if (btn) btn.click();
+  const sel = document.getElementById('sel-fond');
+  if (sel) { sel.value = ticker; loadFondamentaux(); }
+}
+
+async function loadAnalyse(mode = 'portfolio') {
+  const el = document.getElementById('analyse-content');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>Calcul des scores en cours…</div>';
+
+  let tickers;
+  if (mode === 'all') {
+    tickers = TICKERS;
+  } else {
+    const alloc = ALGO_DATA.allocation || {};
+    tickers = Object.keys(alloc).length
+      ? Object.keys(alloc).sort((a, b) => (alloc[b] || 0) - (alloc[a] || 0))
+      : TICKERS.slice(0, 15);
+  }
+
+  // Charger prix complets (avec volume) + societe (pour PER) en parallèle
+  const [priceMap, perMap] = await Promise.all([
+    (async () => {
+      const m = {};
+      await Promise.all(tickers.map(async t => {
+        try {
+          const txt = await get(`${BASE}/actions/${t}_historique.csv`);
+          m[t] = parseCSV(txt);
+        } catch { m[t] = []; }
+      }));
+      return m;
+    })(),
+    (async () => {
+      const m = {};
+      await Promise.all(tickers.map(async t => {
+        try {
+          const txt = await get(`${BASE}/societes/${t}_societe.json`);
+          m[t] = JSON.parse(txt).PER || '';
+        } catch { m[t] = ''; }
+      }));
+      return m;
+    })()
+  ]);
+
+  const results = tickers.map(t => {
+    const rows = priceMap[t] || [];
+    const lastPriceRow = rows[rows.length - 1];
+    const lastPrice = lastPriceRow ? parseFloat(lastPriceRow.Cloture) : null;
+    if (rows.length < 30) {
+      return {
+        ticker: t, total: -99, verdict: { lbl: 'DONNÉES INSUF.', cls: 'verdict-conserver' },
+        sRSI: { score: 0, label: '–' }, sMACD: { score: 0, label: '–' },
+        sTrend: { score: 0, label: '–' }, sLiq: { score: 0, label: '–' },
+        sProphet: { score: 0, label: '–' }, sPER: { score: 0, label: '–' }, lastPrice
+      };
+    }
+    const sc = buildScores(rows, t, perMap[t]);
+    return { ticker: t, ...sc, lastPrice };
+  }).sort((a, b) => b.total - a.total);
+
+  const scoreCell = sc => {
+    const col = sc.score > 0 ? 'var(--up)' : sc.score < 0 ? 'var(--down)' : 'var(--text-sec)';
+    const short = sc.label.split('—')[1]?.trim() || sc.label;
+    return `<span style="color:${col};font-weight:700;font-family:'Courier New',monospace;font-size:11px">${sc.score >= 0 ? '+' : ''}${sc.score}</span>&nbsp;<span style="font-size:11px;color:var(--text-sec)">${short}</span>`;
+  };
+
+  const rows = results.map(r => {
+    const scoreCol = r.total >= 5 ? 'var(--up)' : r.total >= 2 ? 'var(--blue)' : r.total >= -1 ? 'var(--text-sec)' : 'var(--down)';
+    return `<tr onclick="goToFond('${r.ticker}')">
+      <td style="font-weight:700">${r.ticker.replace('_', ' ').toUpperCase()}</td>
+      <td style="text-align:right;font-family:'Courier New',monospace">${r.lastPrice ? fmtFCFA(r.lastPrice) : '–'}</td>
+      <td>${scoreCell(r.sRSI)}</td>
+      <td>${scoreCell(r.sMACD)}</td>
+      <td>${scoreCell(r.sTrend)}</td>
+      <td>${scoreCell(r.sLiq)}</td>
+      <td>${scoreCell(r.sProphet)}</td>
+      <td>${scoreCell(r.sPER)}</td>
+      <td style="text-align:center"><span style="font-weight:800;color:${scoreCol};font-family:'Courier New',monospace;font-size:15px">${r.total >= 0 ? '+' : ''}${r.total === -99 ? '–' : r.total}</span></td>
+      <td><span class="verdict-badge ${r.verdict.cls}" style="font-size:11px;padding:3px 8px">${r.verdict.lbl}</span></td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="overflow-x:auto">
+      <table class="screen-table">
+        <thead><tr>
+          <th>Actif</th>
+          <th style="text-align:right">Prix</th>
+          <th>RSI(14)</th>
+          <th>MACD</th>
+          <th>Tendance MA50</th>
+          <th>Liquidité</th>
+          <th>Prophet</th>
+          <th>PER</th>
+          <th style="text-align:center">Score</th>
+          <th>Verdict</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p class="conseil-warn" style="margin-top:10px">
+      Score composite : RSI (max ±2) · MACD (max ±2) · Tendance MA50 (max ±2) · Liquidité (max ±1) · Prophet (max ±3) · PER (max ±2) → plage −12 à +12.
+      <strong>Cliquez sur un actif</strong> pour ouvrir son analyse détaillée dans l'onglet Fondamentaux.
+    </p>`;
+}
+
+async function init() {
+  try {
+    await loadSignalsData();
+  } catch (e) {
+    console.warn('signals/portfolio JSON not loaded:', e);
+  }
+  populateSelects();
+  try {
+    await Promise.all([loadAction(), loadIndices()]);
+    const badge = document.getElementById('status-badge');
+    badge.className = 'badge badge-ok';
+    let label = 'Actualisé · ' + new Date().toLocaleDateString('fr-FR');
+    if (SIGNALS_META.generated_at) {
+      const d = new Date(SIGNALS_META.generated_at);
+      label += ' · Signaux ' + d.toLocaleDateString('fr-FR');
+    }
+    badge.textContent = label;
+  } catch (e) {
+    const badge = document.getElementById('status-badge');
+    badge.className = 'badge';
+    badge.style.cssText = 'background:#FCEBEB;color:#A32D2D;border-color:#F09595;font-size:11px;padding:4px 10px;border-radius:4px;border:0.5px solid';
+    badge.textContent = 'Erreur de chargement';
+  }
+}
+
+init();
+</script>
+</body>
+</html>

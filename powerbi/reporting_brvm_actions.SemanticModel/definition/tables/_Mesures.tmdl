@@ -1,0 +1,492 @@
+table _Mesures
+	lineageTag: b970d31a-1336-4c89-949e-0fd2271752ae
+
+	/// Cours de clôture moyen dans le contexte courant (une action / une date)
+	measure 'Cours Clôture' = AVERAGE(Cotations_Actions[Cloture])
+		formatString: #,0.00
+		displayFolder: Actions
+		lineageTag: 8ac22402-be3a-456c-8b89-b43a96f7b06b
+
+	/// Dernier cours connu de l'action dans le contexte courant
+	measure 'Dernier Cours' = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])))
+		formatString: #,0.00
+		displayFolder: Actions
+		lineageTag: 4c8f6f88-1657-4e89-906b-6861b8989776
+
+	measure 'Actions Suivies' = DISTINCTCOUNT(Cotations_Actions[Symbol])
+		formatString: 0
+		displayFolder: Marché
+		lineageTag: 00df772f-54f0-49a7-a585-96294e8cf75c
+
+	measure 'Indices Suivis' = DISTINCTCOUNT(Cotations_Indices[Symbol])
+		formatString: 0
+		displayFolder: Marché
+		lineageTag: 9d583ddf-cecb-4c80-ad09-072beadb7a44
+
+	measure 'Dernière Séance' = MAX(Cotations_Actions[Date])
+		formatString: dd/mm/yyyy
+		displayFolder: Marché
+		lineageTag: b6823ae3-9394-41af-8a5f-cd7a7ff26960
+
+	measure 'Première Séance' = MIN(Cotations_Actions[Date])
+		formatString: dd/mm/yyyy
+		displayFolder: Marché
+		lineageTag: 8021f871-e902-408c-bfcd-bce1d2332c27
+
+	/// Rendement piloté par la sélection P_Periode (fenêtres glissantes = dernier cours <= date cible ; calendaires = premier cours >= début de période) : réplique utils.py
+	measure 'Rendement Période' =
+			VAR TypeP = SELECTEDVALUE(P_Periode[Type], "glissante")
+			VAR NbJours = SELECTEDVALUE(P_Periode[Jours], 30)
+			VAR Cle = SELECTEDVALUE(P_Periode[Cle], "1M")
+			VAR LastD = CALCULATE(MAX(Cotations_Actions[Date]), REMOVEFILTERS(Dim_Date))
+			VAR DernierPrix = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date))
+			VAR DebutCalendaire =
+			    SWITCH(Cle,
+			        "WTD", LastD - WEEKDAY(LastD, 3),
+			        "MTD", DATE(YEAR(LastD), MONTH(LastD), 1),
+			        "QTD", DATE(YEAR(LastD), QUOTIENT(MONTH(LastD) - 1, 3) * 3 + 1, 1),
+			        "STD", DATE(YEAR(LastD), IF(MONTH(LastD) <= 6, 1, 7), 1),
+			        "YTD", DATE(YEAR(LastD), 1, 1),
+			        "OTD", DATE(1900, 1, 1),
+			        BLANK())
+			VAR PrixBase =
+			    IF(TypeP = "glissante",
+			        CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date), Cotations_Actions[Date] <= LastD - NbJours),
+			        CALCULATE(FIRSTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date), Cotations_Actions[Date] >= DebutCalendaire))
+			RETURN DIVIDE(DernierPrix, PrixBase) - 1
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Actions\Rendements
+		lineageTag: 0d5745bb-a15e-47e5-ad14-25fb6aef5d85
+
+	measure 'Perf WTD' =
+			VAR LastD = CALCULATE(MAX(Cotations_Actions[Date]), REMOVEFILTERS(Dim_Date))
+			VAR Debut = LastD - WEEKDAY(LastD, 3)
+			VAR DernierPrix = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date))
+			VAR PrixBase = CALCULATE(FIRSTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date), Cotations_Actions[Date] >= Debut)
+			RETURN DIVIDE(DernierPrix, PrixBase) - 1
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Actions\Perf calendaires
+		lineageTag: b0059846-7e70-472b-a606-8b940590d15e
+
+	measure 'Perf MTD' =
+			VAR LastD = CALCULATE(MAX(Cotations_Actions[Date]), REMOVEFILTERS(Dim_Date))
+			VAR Debut = DATE(YEAR(LastD), MONTH(LastD), 1)
+			VAR DernierPrix = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date))
+			VAR PrixBase = CALCULATE(FIRSTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date), Cotations_Actions[Date] >= Debut)
+			RETURN DIVIDE(DernierPrix, PrixBase) - 1
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Actions\Perf calendaires
+		lineageTag: 25c5b898-968c-4bd6-9b95-fc5c35bfc697
+
+	measure 'Perf QTD' =
+			VAR LastD = CALCULATE(MAX(Cotations_Actions[Date]), REMOVEFILTERS(Dim_Date))
+			VAR Debut = DATE(YEAR(LastD), QUOTIENT(MONTH(LastD) - 1, 3) * 3 + 1, 1)
+			VAR DernierPrix = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date))
+			VAR PrixBase = CALCULATE(FIRSTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date), Cotations_Actions[Date] >= Debut)
+			RETURN DIVIDE(DernierPrix, PrixBase) - 1
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Actions\Perf calendaires
+		lineageTag: f9162cdb-a22e-4019-984e-4c1ffcb3c9bc
+
+	measure 'Perf STD' =
+			VAR LastD = CALCULATE(MAX(Cotations_Actions[Date]), REMOVEFILTERS(Dim_Date))
+			VAR Debut = DATE(YEAR(LastD), IF(MONTH(LastD) <= 6, 1, 7), 1)
+			VAR DernierPrix = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date))
+			VAR PrixBase = CALCULATE(FIRSTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date), Cotations_Actions[Date] >= Debut)
+			RETURN DIVIDE(DernierPrix, PrixBase) - 1
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Actions\Perf calendaires
+		lineageTag: 7c679d3f-44cb-4146-b31f-01e2b95b40bf
+
+	measure 'Perf YTD' =
+			VAR LastD = CALCULATE(MAX(Cotations_Actions[Date]), REMOVEFILTERS(Dim_Date))
+			VAR Debut = DATE(YEAR(LastD), 1, 1)
+			VAR DernierPrix = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date))
+			VAR PrixBase = CALCULATE(FIRSTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date), Cotations_Actions[Date] >= Debut)
+			RETURN DIVIDE(DernierPrix, PrixBase) - 1
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Actions\Perf calendaires
+		lineageTag: 4c7881de-ceba-46d1-a55e-619ac9024429
+
+	measure 'Perf OTD' =
+			VAR DernierPrix = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date))
+			VAR PrixBase = CALCULATE(FIRSTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date))
+			RETURN DIVIDE(DernierPrix, PrixBase) - 1
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Actions\Perf calendaires
+		lineageTag: c8c90636-727f-45a3-86fd-ff6903fb2ee5
+
+	measure 'Perf 1 Sem' =
+			VAR LastD = CALCULATE(MAX(Cotations_Actions[Date]), REMOVEFILTERS(Dim_Date))
+			VAR DernierPrix = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date))
+			VAR PrixBase = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date), Cotations_Actions[Date] <= LastD - 7)
+			RETURN DIVIDE(DernierPrix, PrixBase) - 1
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Actions\Perf glissantes
+		lineageTag: 63c7d6df-a94b-41da-99a3-461e4f194e5a
+
+	measure 'Perf 1 Mois' =
+			VAR LastD = CALCULATE(MAX(Cotations_Actions[Date]), REMOVEFILTERS(Dim_Date))
+			VAR DernierPrix = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date))
+			VAR PrixBase = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date), Cotations_Actions[Date] <= LastD - 30)
+			RETURN DIVIDE(DernierPrix, PrixBase) - 1
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Actions\Perf glissantes
+		lineageTag: 64f37bb2-a1e8-4ddd-9e7b-64b5e26e9c5c
+
+	measure 'Perf 3 Mois' =
+			VAR LastD = CALCULATE(MAX(Cotations_Actions[Date]), REMOVEFILTERS(Dim_Date))
+			VAR DernierPrix = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date))
+			VAR PrixBase = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date), Cotations_Actions[Date] <= LastD - 91)
+			RETURN DIVIDE(DernierPrix, PrixBase) - 1
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Actions\Perf glissantes
+		lineageTag: ca84f8e8-e9cf-4ed5-a093-b88fce3fce73
+
+	measure 'Perf 6 Mois' =
+			VAR LastD = CALCULATE(MAX(Cotations_Actions[Date]), REMOVEFILTERS(Dim_Date))
+			VAR DernierPrix = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date))
+			VAR PrixBase = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date), Cotations_Actions[Date] <= LastD - 182)
+			RETURN DIVIDE(DernierPrix, PrixBase) - 1
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Actions\Perf glissantes
+		lineageTag: e4eceae5-92ca-407d-a8e3-ef789f9228d5
+
+	measure 'Perf 1 An' =
+			VAR LastD = CALCULATE(MAX(Cotations_Actions[Date]), REMOVEFILTERS(Dim_Date))
+			VAR DernierPrix = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date))
+			VAR PrixBase = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date), Cotations_Actions[Date] <= LastD - 365)
+			RETURN DIVIDE(DernierPrix, PrixBase) - 1
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Actions\Perf glissantes
+		lineageTag: 6390b7da-57db-4bbf-901c-c0b17cde11cf
+
+	measure 'Perf 3 Ans' =
+			VAR LastD = CALCULATE(MAX(Cotations_Actions[Date]), REMOVEFILTERS(Dim_Date))
+			VAR DernierPrix = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date))
+			VAR PrixBase = CALCULATE(LASTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), REMOVEFILTERS(Dim_Date), Cotations_Actions[Date] <= LastD - 1095)
+			RETURN DIVIDE(DernierPrix, PrixBase) - 1
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Actions\Perf glissantes
+		lineageTag: 1c65c2e9-8c7f-4f65-b20d-873e66f9ec76
+
+	/// Cours normalisé à 100 sur la première séance de la période visible
+	measure 'Base 100' =
+			VAR PremierPrix = CALCULATE(FIRSTNONBLANKVALUE(Cotations_Actions[Date], AVERAGE(Cotations_Actions[Cloture])), ALLSELECTED(Dim_Date))
+			RETURN DIVIDE([Cours Clôture], PremierPrix) * 100
+		formatString: #,0.00
+		displayFolder: Actions
+		lineageTag: 0b25c7fe-645c-4882-9e44-782ac5b4f000
+
+	/// Écart au plus haut atteint depuis le début de la période visible
+	measure 'Drawdown %' =
+			VAR DateCourante = MAX(Dim_Date[Date])
+			VAR MaxCourant = CALCULATE(MAX(Cotations_Actions[Cloture]), FILTER(ALLSELECTED(Dim_Date[Date]), Dim_Date[Date] <= DateCourante))
+			RETURN DIVIDE([Cours Clôture], MaxCourant) - 1
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Actions
+		lineageTag: 98e8e505-e7df-453d-8481-15688608de2f
+
+	/// Écart-type des rendements quotidiens × racine(252) : réplique utils.py
+	measure 'Volatilité Annualisée' =
+			VAR EcartType = STDEV.S(Cotations_Actions[VariationPct])
+			RETURN DIVIDE(EcartType, 100) * SQRT(252)
+		formatString: 0.00%
+		displayFolder: Actions
+		lineageTag: 02fb26c0-65fd-4044-b6fd-3ad9dd176044
+
+	measure Capitalisation = SUMX(VALUES(Dim_Action[Symbol]), CALCULATE(MAX(Dim_Action[NombreTitres]) * [Dernier Cours]))
+		formatString: #,0
+		displayFolder: Actions
+		lineageTag: 022c1247-072f-4629-b1f8-ae89705bea56
+
+	measure 'Capitalisation (Mrd FCFA)' = DIVIDE([Capitalisation], 1000000000)
+		formatString: #,0.00
+		displayFolder: Actions
+		lineageTag: 897b1278-9f16-4de7-9ede-8e887c2755f0
+
+	measure 'Rendement Dividende' = DIVIDE(SELECTEDVALUE(Dim_Action[Dividende]), [Dernier Cours])
+		formatString: 0.00%
+		displayFolder: Actions
+		lineageTag: 3b613cec-0d88-4791-93b8-7c4584af951d
+
+	measure 'Niveau Indice' = AVERAGE(Cotations_Indices[Cloture])
+		formatString: #,0.00
+		displayFolder: Indices
+		lineageTag: 9ead814c-247b-4494-8590-84ca46ec1a2d
+
+	measure 'Dernier Niveau Indice' = CALCULATE(LASTNONBLANKVALUE(Cotations_Indices[Date], AVERAGE(Cotations_Indices[Cloture])))
+		formatString: #,0.00
+		displayFolder: Indices
+		lineageTag: c8b74acf-02a4-4d68-b673-a850f5f5168b
+
+	measure 'Base 100 Indice' =
+			VAR PremierNiveau = CALCULATE(FIRSTNONBLANKVALUE(Cotations_Indices[Date], AVERAGE(Cotations_Indices[Cloture])), ALLSELECTED(Dim_Date))
+			RETURN DIVIDE([Niveau Indice], PremierNiveau) * 100
+		formatString: #,0.00
+		displayFolder: Indices
+		lineageTag: 33dc3b8c-4c5b-4d31-b9a7-6611ed8be06b
+
+	measure 'Drawdown % Indice' =
+			VAR DateCourante = MAX(Dim_Date[Date])
+			VAR MaxCourant = CALCULATE(MAX(Cotations_Indices[Cloture]), FILTER(ALLSELECTED(Dim_Date[Date]), Dim_Date[Date] <= DateCourante))
+			RETURN DIVIDE([Niveau Indice], MaxCourant) - 1
+		formatString: 0.00%;-0.00%;0.00%
+		displayFolder: Indices
+		lineageTag: 82cc4f4a-ba36-4038-9d43-adb8dee8a6d6
+
+	measure 'Volatilité Annualisée Indice' =
+			VAR EcartType = STDEV.S(Cotations_Indices[VariationPct])
+			RETURN DIVIDE(EcartType, 100) * SQRT(252)
+		formatString: 0.00%
+		displayFolder: Indices
+		lineageTag: c0228d0f-9c59-4eb9-af84-68897d04be15
+
+	measure 'Perf YTD Indice' =
+			VAR LastD = CALCULATE(MAX(Cotations_Indices[Date]), REMOVEFILTERS(Dim_Date))
+			VAR Debut = DATE(YEAR(LastD), 1, 1)
+			VAR DernierNiveau = CALCULATE(LASTNONBLANKVALUE(Cotations_Indices[Date], AVERAGE(Cotations_Indices[Cloture])), REMOVEFILTERS(Dim_Date))
+			VAR NiveauBase = CALCULATE(FIRSTNONBLANKVALUE(Cotations_Indices[Date], AVERAGE(Cotations_Indices[Cloture])), REMOVEFILTERS(Dim_Date), Cotations_Indices[Date] >= Debut)
+			RETURN DIVIDE(DernierNiveau, NiveauBase) - 1
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Indices
+		lineageTag: 29e914d8-a95f-4c18-9ddf-67c48697b41a
+
+	measure 'Rendement Période Indice' =
+			VAR TypeP = SELECTEDVALUE(P_Periode[Type], "glissante")
+			VAR NbJours = SELECTEDVALUE(P_Periode[Jours], 30)
+			VAR Cle = SELECTEDVALUE(P_Periode[Cle], "1M")
+			VAR LastD = CALCULATE(MAX(Cotations_Indices[Date]), REMOVEFILTERS(Dim_Date))
+			VAR DernierNiveau = CALCULATE(LASTNONBLANKVALUE(Cotations_Indices[Date], AVERAGE(Cotations_Indices[Cloture])), REMOVEFILTERS(Dim_Date))
+			VAR DebutCalendaire =
+			    SWITCH(Cle,
+			        "WTD", LastD - WEEKDAY(LastD, 3),
+			        "MTD", DATE(YEAR(LastD), MONTH(LastD), 1),
+			        "QTD", DATE(YEAR(LastD), QUOTIENT(MONTH(LastD) - 1, 3) * 3 + 1, 1),
+			        "STD", DATE(YEAR(LastD), IF(MONTH(LastD) <= 6, 1, 7), 1),
+			        "YTD", DATE(YEAR(LastD), 1, 1),
+			        "OTD", DATE(1900, 1, 1),
+			        BLANK())
+			VAR NiveauBase =
+			    IF(TypeP = "glissante",
+			        CALCULATE(LASTNONBLANKVALUE(Cotations_Indices[Date], AVERAGE(Cotations_Indices[Cloture])), REMOVEFILTERS(Dim_Date), Cotations_Indices[Date] <= LastD - NbJours),
+			        CALCULATE(FIRSTNONBLANKVALUE(Cotations_Indices[Date], AVERAGE(Cotations_Indices[Cloture])), REMOVEFILTERS(Dim_Date), Cotations_Indices[Date] >= DebutCalendaire))
+			RETURN DIVIDE(DernierNiveau, NiveauBase) - 1
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Indices
+		lineageTag: 4e69df1c-6428-4cca-86ea-4ac96dffce86
+
+	measure 'BRVM Composite' = CALCULATE([Dernier Niveau Indice], REMOVEFILTERS(Dim_Indice), Dim_Indice[Symbol] = "BRVMC")
+		formatString: #,0.00
+		displayFolder: Bandeau marché
+		lineageTag: e9224c6c-c8ce-4744-9d16-bcd51c969e49
+
+	measure 'BRVM Composite Var Jour' =
+			VAR LastD = CALCULATE(MAX(Cotations_Indices[Date]), REMOVEFILTERS(Dim_Date), REMOVEFILTERS(Dim_Indice), Dim_Indice[Symbol] = "BRVMC")
+			RETURN DIVIDE(CALCULATE(AVERAGE(Cotations_Indices[VariationPct]), REMOVEFILTERS(Dim_Date), REMOVEFILTERS(Dim_Indice), Dim_Indice[Symbol] = "BRVMC", Cotations_Indices[Date] = LastD), 100)
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Bandeau marché
+		lineageTag: e2fa736f-c115-4830-9a6d-90b9c882ddc5
+
+	measure 'BRVM Composite YTD' = CALCULATE([Perf YTD Indice], REMOVEFILTERS(Dim_Indice), Dim_Indice[Symbol] = "BRVMC")
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Bandeau marché
+		lineageTag: d35ac640-ad80-4737-8261-150333bdc0a8
+
+	/// Volume total échangé (FCFA) lors de la dernière séance : respecte les filtres Secteur/Action
+	measure 'Volume FCFA Dernière Séance' =
+			VAR LastD = CALCULATE(MAX(Cotations_Actions[Date]), REMOVEFILTERS(Dim_Date))
+			RETURN CALCULATE(SUM(Cotations_Actions[VolumeFCFA]), REMOVEFILTERS(Dim_Date), Cotations_Actions[Date] = LastD)
+		formatString: #,0
+		displayFolder: Marché
+		lineageTag: 3f6a1c2e-9b4d-4e8a-b7c5-a1d2e3f4a501
+
+	measure 'Volume Titres Dernière Séance' =
+			VAR LastD = CALCULATE(MAX(Cotations_Actions[Date]), REMOVEFILTERS(Dim_Date))
+			RETURN CALCULATE(SUM(Cotations_Actions[VolumeTitres]), REMOVEFILTERS(Dim_Date), Cotations_Actions[Date] = LastD)
+		formatString: #,0
+		displayFolder: Marché
+		lineageTag: 3f6a1c2e-9b4d-4e8a-b7c5-a1d2e3f4a502
+
+	measure 'Volume FCFA Dernière Séance (M)' = DIVIDE([Volume FCFA Dernière Séance], 1000000)
+		formatString: #,0.0
+		displayFolder: Marché
+		lineageTag: 3f6a1c2e-9b4d-4e8a-b7c5-a1d2e3f4a503
+
+	measure 'Séances Médianes par Action' = MEDIANX(VALUES(Cotations_Actions[Symbol]), CALCULATE(COUNTROWS(Cotations_Actions)))
+		formatString: #,0
+		displayFolder: Marché
+		lineageTag: 3f6a1c2e-9b4d-4e8a-b7c5-a1d2e3f4a504
+
+	measure 'Nb Séances' = COUNTROWS(Cotations_Actions)
+		formatString: #,0
+		displayFolder: Actions
+		lineageTag: 3f6a1c2e-9b4d-4e8a-b7c5-a1d2e3f4a505
+
+	measure 'Cours Min' = MIN(Cotations_Actions[Cloture])
+		formatString: #,0.00
+		displayFolder: Actions
+		lineageTag: 3f6a1c2e-9b4d-4e8a-b7c5-a1d2e3f4a506
+
+	measure 'Cours Max' = MAX(Cotations_Actions[Cloture])
+		formatString: #,0.00
+		displayFolder: Actions
+		lineageTag: 3f6a1c2e-9b4d-4e8a-b7c5-a1d2e3f4a507
+
+	/// Plus haut cours de clôture sur les 365 derniers jours calendaires
+	measure 'Plus Haut 1 An' =
+			VAR LastD = CALCULATE(MAX(Cotations_Actions[Date]), REMOVEFILTERS(Dim_Date))
+			RETURN CALCULATE(MAX(Cotations_Actions[Cloture]), REMOVEFILTERS(Dim_Date), Cotations_Actions[Date] > LastD - 365)
+		formatString: #,0.00
+		displayFolder: Actions
+		lineageTag: 3f6a1c2e-9b4d-4e8a-b7c5-a1d2e3f4a508
+
+	measure 'KYC Valorisation (MFCFA)' = SELECTEDVALUE(Dim_Action[ValorisationMFCFA])
+		formatString: #,0
+		displayFolder: KYC
+		lineageTag: 3f6a1c2e-9b4d-4e8a-b7c5-a1d2e3f4a509
+
+	measure 'KYC PER' = SELECTEDVALUE(Dim_Action[PER])
+		formatString: 0.00
+		displayFolder: KYC
+		lineageTag: 3f6a1c2e-9b4d-4e8a-b7c5-a1d2e3f4a510
+
+	measure 'KYC Dividende (FCFA)' = SELECTEDVALUE(Dim_Action[Dividende])
+		formatString: #,0.00
+		displayFolder: KYC
+		lineageTag: 3f6a1c2e-9b4d-4e8a-b7c5-a1d2e3f4a511
+
+	measure 'KYC Flottant' = DIVIDE(SELECTEDVALUE(Dim_Action[FlottantPct]), 100)
+		formatString: 0.00%
+		displayFolder: KYC
+		lineageTag: 3f6a1c2e-9b4d-4e8a-b7c5-a1d2e3f4a512
+
+	measure 'KYC Nb Titres' = SELECTEDVALUE(Dim_Action[NombreTitres])
+		formatString: #,0
+		displayFolder: KYC
+		lineageTag: 3f6a1c2e-9b4d-4e8a-b7c5-a1d2e3f4a513
+
+	measure 'KYC BNPA' = SELECTEDVALUE(Dim_Action[BNPA])
+		formatString: #,0.00
+		displayFolder: KYC
+		lineageTag: 3f6a1c2e-9b4d-4e8a-b7c5-a1d2e3f4a514
+
+	measure 'KYC Chiffre Affaires (MFCFA)' = SELECTEDVALUE(Dim_Action[ChiffreAffaires])
+		formatString: #,0
+		displayFolder: KYC
+		lineageTag: 3f6a1c2e-9b4d-4e8a-b7c5-a1d2e3f4a515
+
+	measure 'KYC Résultat Net (MFCFA)' = SELECTEDVALUE(Dim_Action[ResultatNet])
+		formatString: #,0
+		displayFolder: KYC
+		lineageTag: 3f6a1c2e-9b4d-4e8a-b7c5-a1d2e3f4a516
+
+	/// Chiffre d'affaires (MFCFA) issu des fondamentaux : axe = Fondamentaux[Annee]
+	measure CA = CALCULATE(SUM(Fondamentaux[Valeur]), Fondamentaux[Indicateur] = "Chiffre d'affaires")
+		formatString: #,0
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0001-4e8a-b7c5-fad0000000a1
+
+	measure 'Résultat Net Fond' = CALCULATE(SUM(Fondamentaux[Valeur]), Fondamentaux[Indicateur] = "Résultat net")
+		formatString: #,0
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0002-4e8a-b7c5-fad0000000a2
+
+	measure 'BNPA Fond' = CALCULATE(SUM(Fondamentaux[Valeur]), Fondamentaux[Indicateur] = "BNPA")
+		formatString: #,0.00
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0003-4e8a-b7c5-fad0000000a3
+
+	measure 'PER Fond' = CALCULATE(SUM(Fondamentaux[Valeur]), Fondamentaux[Indicateur] = "PER")
+		formatString: 0.00
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0004-4e8a-b7c5-fad0000000a4
+
+	measure 'Dividende Fond' = CALCULATE(SUM(Fondamentaux[Valeur]), Fondamentaux[Indicateur] = "Dividende")
+		formatString: #,0.00
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0005-4e8a-b7c5-fad0000000a5
+
+	measure 'Croissance CA' = DIVIDE(CALCULATE(SUM(Fondamentaux[Valeur]), Fondamentaux[Indicateur] = "Croissance CA"), 100)
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0006-4e8a-b7c5-fad0000000a6
+
+	measure 'Croissance RN' = DIVIDE(CALCULATE(SUM(Fondamentaux[Valeur]), Fondamentaux[Indicateur] = "Croissance RN"), 100)
+		formatString: +0.00%;-0.00%;0.00%
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0007-4e8a-b7c5-fad0000000a7
+
+	/// Marge nette = Résultat net / Chiffre d'affaires (par exercice)
+	measure 'Marge Nette' = DIVIDE([Résultat Net Fond], [CA])
+		formatString: 0.00%
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0008-4e8a-b7c5-fad0000000a8
+
+	/// Taux de distribution = Dividende / BNPA (par exercice)
+	measure Payout = DIVIDE([Dividende Fond], [BNPA Fond])
+		formatString: 0.00%
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0009-4e8a-b7c5-fad0000000a9
+
+	/// Dernier exercice fondamental connu dans le contexte société
+	measure 'Dernier Exercice' = CALCULATE(MAX(Fondamentaux[Annee]), ALLEXCEPT(Fondamentaux, Dim_Action))
+		formatString: 0
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0010-4e8a-b7c5-fad0000000b0
+
+	measure 'CA (dernier ex.)' = CALCULATE([CA], Fondamentaux[Annee] = [Dernier Exercice])
+		formatString: #,0
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0011-4e8a-b7c5-fad0000000b1
+
+	measure 'RN (dernier ex.)' = CALCULATE([Résultat Net Fond], Fondamentaux[Annee] = [Dernier Exercice])
+		formatString: #,0
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0012-4e8a-b7c5-fad0000000b2
+
+	measure 'Marge Nette (dernier ex.)' = CALCULATE([Marge Nette], Fondamentaux[Annee] = [Dernier Exercice])
+		formatString: 0.00%
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0013-4e8a-b7c5-fad0000000b3
+
+	measure 'Payout (dernier ex.)' = CALCULATE([Payout], Fondamentaux[Annee] = [Dernier Exercice])
+		formatString: 0.00%
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0014-4e8a-b7c5-fad0000000b4
+
+	/// Marge nette actuelle (snapshot Dim_Action) : agrège correctement dans une table
+	measure 'Marge Nette Actuelle' = DIVIDE(SUMX(VALUES(Dim_Action[Symbol]), Dim_Action[ResultatNet]), SUMX(VALUES(Dim_Action[Symbol]), Dim_Action[ChiffreAffaires]))
+		formatString: 0.00%
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0015-4e8a-b7c5-fad0000000b5
+
+	/// Taux de distribution actuel (snapshot Dim_Action)
+	measure 'Payout Actuel' = DIVIDE(SUMX(VALUES(Dim_Action[Symbol]), Dim_Action[Dividende]), SUMX(VALUES(Dim_Action[Symbol]), Dim_Action[BNPA]))
+		formatString: 0.00%
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0016-4e8a-b7c5-fad0000000b6
+
+	/// Poids de la société dans la capitalisation totale du marché
+	measure 'Poids Marché %' = DIVIDE([Capitalisation], CALCULATE([Capitalisation], ALL(Dim_Action)))
+		formatString: 0.00%
+		displayFolder: Fondamental
+		lineageTag: 4a7b1c2d-0017-4e8a-b7c5-fad0000000b7
+
+	column Col
+		dataType: string
+		isHidden
+		lineageTag: 1cc619ea-60aa-4ec8-9c03-35a118fc340f
+		summarizeBy: none
+		sourceColumn: Col
+
+	partition _Mesures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Col = text], {})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

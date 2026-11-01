@@ -1,0 +1,44 @@
+table Dim_Indice
+	lineageTag: df5dde27-c3fa-4cc2-a8f3-cc4857ed7036
+
+	column Symbol
+		dataType: string
+		lineageTag: 560bf703-9226-446b-9ceb-b98131bed235
+		summarizeBy: none
+		sourceColumn: Symbol
+
+	column SymbolAffiche
+		dataType: string
+		lineageTag: ba788092-61e1-4931-adf5-6f5b9e91fbef
+		summarizeBy: none
+		sourceColumn: SymbolAffiche
+
+	column Name
+		dataType: string
+		lineageTag: 35a4ac4c-4b5b-4dfa-9a79-f76a0c00cd2d
+		summarizeBy: none
+		sourceColumn: Name
+
+	column ISIN
+		dataType: string
+		lineageTag: 69501055-71bd-4c52-9150-dc3fbe206859
+		summarizeBy: none
+		sourceColumn: ISIN
+
+	partition Dim_Indice = m
+		mode: import
+		source =
+				let
+				    CheminDonnees = "c:\Users\DYLANE\OneDrive - CGF BOURSE\Bureau\MES MINI-APPS\BRVM app\data",
+				    Source = Folder.Files(CheminDonnees & "\indices"),
+				    FichiersInfo = Table.SelectRows(Source, each Text.EndsWith([Name], "_info.json")),
+				    AjoutSymbol = Table.AddColumn(FichiersInfo, "Symbol", each Text.BeforeDelimiter([Name], "_info.json"), type text),
+				    AjoutRecord = Table.AddColumn(AjoutSymbol, "R", each Json.Document([Content], 65001)),
+				    Selection = Table.SelectColumns(AjoutRecord, {"Symbol", "R"}),
+				    AjoutChamps = Table.ExpandRecordColumn(Table.TransformColumns(Selection, {{"R", each [SymbolAffiche = Record.FieldOrDefault(_, "Symbol", null), Name = Record.FieldOrDefault(_, "Name", null), ISIN = Record.FieldOrDefault(_, "ISIN", null)]}}), "R", {"SymbolAffiche", "Name", "ISIN"}),
+				    Types = Table.TransformColumnTypes(AjoutChamps, {{"Symbol", type text}, {"SymbolAffiche", type text}, {"Name", type text}, {"ISIN", type text}})
+				in
+				    Types
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "cc33dd44ee55ff66aa11",
+  "position": {
+    "x": 144,
+    "y": 136,
+    "z": 201,
+    "width": 138,
+    "height": 84
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
+                  "Property": "RN (dernier ex.)"
+                }
+              },
+              "queryRef": "_Mesures.RN (dernier ex.)",
+              "nativeQueryRef": "RN (dernier ex.)",
+              "displayName": "Résultat net (MFCFA)"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

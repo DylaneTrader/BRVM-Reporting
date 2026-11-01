@@ -1,0 +1,86 @@
+table Actualites
+	lineageTag: f7287fbf-31d1-4d8c-9bab-910d6005032b
+
+	column id
+		dataType: string
+		lineageTag: 76ecd82c-6bba-4461-8a7b-e059aeaa7b8d
+		summarizeBy: none
+		sourceColumn: id
+
+	column titre
+		dataType: string
+		lineageTag: a3e5e103-6c1f-40da-9904-c58fa35c49be
+		summarizeBy: none
+		sourceColumn: titre
+
+	column DatePublication
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: 8aa0c637-c181-4796-8a3c-eec24c90ac44
+		summarizeBy: none
+		sourceColumn: DatePublication
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column auteur
+		dataType: string
+		lineageTag: c19d2eab-9a7a-4503-beb2-94508cab7079
+		summarizeBy: none
+		sourceColumn: auteur
+
+	column categorie
+		dataType: string
+		lineageTag: d6e617ef-d638-4d91-99d2-a03206736839
+		summarizeBy: none
+		sourceColumn: categorie
+
+	column contenu
+		dataType: string
+		lineageTag: b3d79e15-e322-4f60-8f57-034776672e04
+		summarizeBy: none
+		sourceColumn: contenu
+
+	column Extrait
+		dataType: string
+		lineageTag: 8d4c6063-aa63-467a-8287-0197c73078a4
+		summarizeBy: none
+		sourceColumn: Extrait
+
+	column image_url
+		dataType: string
+		lineageTag: 40723e6b-bef0-4005-8ec2-3c9e10dd9799
+		dataCategory: ImageUrl
+		summarizeBy: none
+		sourceColumn: image_url
+
+	column url
+		dataType: string
+		lineageTag: b92fd8b0-d084-4c0c-b6f6-45320392d8d5
+		dataCategory: WebUrl
+		summarizeBy: none
+		sourceColumn: url
+
+	column DateScraping
+		dataType: dateTime
+		formatString: dd/mm/yyyy hh:nn
+		lineageTag: 98c6b63f-ef63-40aa-a966-9345c4626748
+		summarizeBy: none
+		sourceColumn: DateScraping
+
+	partition Actualites = m
+		mode: import
+		source =
+				let
+				    CheminDonnees = "c:\Users\DYLANE\OneDrive - CGF BOURSE\Bureau\MES MINI-APPS\BRVM app\data",
+				    Source = Csv.Document(File.Contents(CheminDonnees & "\news\actualites_brvm.csv"), [Delimiter = ";", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    EnTetes = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    DatePub = Table.AddColumn(EnTetes, "DatePublication", each try Date.From(DateTimeZone.From([date_publication])) otherwise (try Date.From([date_publication], "fr-FR") otherwise null), type date),
+				    DateScrap = Table.AddColumn(DatePub, "DateScraping", each try DateTime.From(DateTimeZone.From([date_scraping])) otherwise (try DateTime.From([date_scraping], "fr-FR") otherwise null), type datetime),
+				    Extrait = Table.AddColumn(DateScrap, "Extrait", each if [contenu] = null then null else Text.Start(Text.Trim([contenu]), 220) & (if Text.Length(Text.Trim([contenu])) > 220 then "…" else ""), type text),
+				    Selection = Table.SelectColumns(Extrait, {"id", "titre", "DatePublication", "auteur", "categorie", "contenu", "Extrait", "image_url", "url", "DateScraping"}),
+				    Types = Table.TransformColumnTypes(Selection, {{"id", type text}, {"titre", type text}, {"auteur", type text}, {"categorie", type text}, {"contenu", type text}, {"image_url", type text}, {"url", type text}})
+				in
+				    Types
+
+	annotation PBI_ResultType = Table
+

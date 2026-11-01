@@ -1,0 +1,87 @@
+table Cotations_Actions
+	lineageTag: e2ec37f4-2921-4441-82de-fdaead9153d3
+
+	column Date
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: f31443df-a32a-49ad-a8e1-e2f89dde217f
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Symbol
+		dataType: string
+		lineageTag: b7306f96-a09c-4b28-bfd5-a1402fe6f010
+		summarizeBy: none
+		sourceColumn: Symbol
+
+	column Ouverture
+		dataType: double
+		formatString: #,0.00
+		lineageTag: e9b803d5-6062-48aa-b66a-978cc6334311
+		summarizeBy: none
+		sourceColumn: Ouverture
+
+	column PlusHaut
+		dataType: double
+		formatString: #,0.00
+		lineageTag: ef4b6d20-8c41-43ec-b753-a63ccaaf6217
+		summarizeBy: none
+		sourceColumn: PlusHaut
+
+	column PlusBas
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 19ed25fe-8022-4ec4-8f1e-66654bc4029c
+		summarizeBy: none
+		sourceColumn: PlusBas
+
+	column Cloture
+		dataType: double
+		formatString: #,0.00
+		lineageTag: ac9322b6-614c-4803-b85b-56a46eb28e17
+		summarizeBy: none
+		sourceColumn: Cloture
+
+	column VolumeTitres
+		dataType: int64
+		formatString: #,0
+		lineageTag: befb1613-af71-43a5-aa29-bb66356f7b29
+		summarizeBy: sum
+		sourceColumn: VolumeTitres
+
+	column VolumeFCFA
+		dataType: double
+		formatString: #,0
+		lineageTag: e8664874-2d51-49fc-85c3-6092ddfa4eff
+		summarizeBy: sum
+		sourceColumn: VolumeFCFA
+
+	column VariationPct
+		dataType: double
+		formatString: 0.00
+		lineageTag: 24743072-ddff-4b66-ad62-04574d903aac
+		summarizeBy: none
+		sourceColumn: VariationPct
+
+	partition Cotations_Actions = m
+		mode: import
+		source =
+				let
+				    CheminDonnees = "c:\Users\DYLANE\OneDrive - CGF BOURSE\Bureau\MES MINI-APPS\BRVM app\data",
+				    Source = Folder.Files(CheminDonnees & "\actions"),
+				    FichiersHistorique = Table.SelectRows(Source, each Text.EndsWith([Name], "_historique.csv")),
+				    AjoutSymbol = Table.AddColumn(FichiersHistorique, "Symbol", each Text.Replace(Text.BeforeDelimiter([Name], "_historique.csv"), "_", "."), type text),
+				    AjoutData = Table.AddColumn(AjoutSymbol, "Data", each Table.PromoteHeaders(Csv.Document([Content], [Delimiter = ";", Encoding = 65001, QuoteStyle = QuoteStyle.None]), [PromoteAllScalars = true])),
+				    Selection = Table.SelectColumns(AjoutData, {"Symbol", "Data"}),
+				    Expansion = Table.ExpandTableColumn(Selection, "Data", {"Date", "Ouverture", "Plus_Haut", "Plus_Bas", "Cloture", "Volume_Titres", "Volume_FCFA", "Variation_Pct"}),
+				    TypeDate = Table.TransformColumnTypes(Expansion, {{"Date", type date}}, "en-US"),
+				    TypesNombres = Table.TransformColumnTypes(TypeDate, {{"Ouverture", type number}, {"Plus_Haut", type number}, {"Plus_Bas", type number}, {"Cloture", type number}, {"Volume_Titres", Int64.Type}, {"Volume_FCFA", type number}, {"Variation_Pct", type number}}, "fr-FR"),
+				    Renommage = Table.RenameColumns(TypesNombres, {{"Plus_Haut", "PlusHaut"}, {"Plus_Bas", "PlusBas"}, {"Volume_Titres", "VolumeTitres"}, {"Volume_FCFA", "VolumeFCFA"}, {"Variation_Pct", "VariationPct"}}),
+				    SansDateNulle = Table.SelectRows(Renommage, each [Date] <> null)
+				in
+				    SansDateNulle
+
+	annotation PBI_ResultType = Table
+

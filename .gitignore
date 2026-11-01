@@ -1,0 +1,18 @@
+# Node / Next.js
+node_modules/
+.next/
+out/
+
+# Bases et réglages locaux
+*.db
+*.db-journal
+.env
+.env.local
+
+# Power BI : caches et réglages locaux (par utilisateur, non versionnés)
+**/.pbi/cache.abf
+**/.pbi/localSettings.json
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,183 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "cc33dd44ee55ff66aa32",
+  "position": {
+    "x": 0,
+    "y": 762,
+    "z": 520,
+    "width": 780,
+    "height": 300
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dim_Action"
+                    }
+                  },
+                  "Property": "Name"
+                }
+              },
+              "queryRef": "Dim_Action.Name",
+              "nativeQueryRef": "Name",
+              "displayName": "Nom"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Dim_Action"
+                    }
+                  },
+                  "Property": "SecteurCourt"
+                }
+              },
+              "queryRef": "Dim_Action.SecteurCourt",
+              "nativeQueryRef": "SecteurCourt",
+              "displayName": "Secteur"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
+                  "Property": "KYC PER"
+                }
+              },
+              "queryRef": "_Mesures.KYC PER",
+              "nativeQueryRef": "KYC PER",
+              "displayName": "PER"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
+                  "Property": "Rendement Dividende"
+                }
+              },
+              "queryRef": "_Mesures.Rendement Dividende",
+              "nativeQueryRef": "Rendement Dividende",
+              "displayName": "Rend. div."
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
+                  "Property": "Marge Nette Actuelle"
+                }
+              },
+              "queryRef": "_Mesures.Marge Nette Actuelle",
+              "nativeQueryRef": "Marge Nette Actuelle",
+              "displayName": "Marge nette"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
+                  "Property": "Payout Actuel"
+                }
+              },
+              "queryRef": "_Mesures.Payout Actuel",
+              "nativeQueryRef": "Payout Actuel",
+              "displayName": "Payout"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
+                  "Property": "Capitalisation (Mrd FCFA)"
+                }
+              },
+              "queryRef": "_Mesures.Capitalisation (Mrd FCFA)",
+              "nativeQueryRef": "Capitalisation (Mrd FCFA)",
+              "displayName": "Capi (Mrd)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
+                  "Property": "Poids Marché %"
+                }
+              },
+              "queryRef": "_Mesures.Poids Marché %",
+              "nativeQueryRef": "Poids Marché %",
+              "displayName": "Poids"
+            }
+          ]
+        },
+        "sortDefinition": {
+          "sort": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "_Mesures"
+                    }
+                  },
+                  "Property": "Capitalisation (Mrd FCFA)"
+                }
+              },
+              "direction": "Descending"
+            }
+          ],
+          "isDefaultSort": true
+        }
+      }
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Multiples de valorisation par action'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

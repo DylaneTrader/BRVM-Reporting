@@ -1,0 +1,24 @@
+relationship RelDateActions
+	fromColumn: Cotations_Actions.Date
+	toColumn: Dim_Date.Date
+
+relationship RelDateIndices
+	fromColumn: Cotations_Indices.Date
+	toColumn: Dim_Date.Date
+
+relationship RelActionCotations
+	fromColumn: Cotations_Actions.Symbol
+	toColumn: Dim_Action.Symbol
+
+relationship RelIndiceCotations
+	fromColumn: Cotations_Indices.Symbol
+	toColumn: Dim_Indice.Symbol
+
+relationship RelActionFondamentaux
+	fromColumn: Fondamentaux.Symbol
+	toColumn: Dim_Action.Symbol
+
+relationship RelActionDividendes
+	fromColumn: Dividendes.Ticker
+	toColumn: Dim_Action.Symbol
+
