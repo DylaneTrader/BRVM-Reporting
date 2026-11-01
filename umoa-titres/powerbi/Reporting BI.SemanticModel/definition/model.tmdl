@@ -1,0 +1,26 @@
+model Model
+	culture: fr-FR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: fr-CI
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_ProTooling = ["DevMode"]
+
+annotation PBI_QueryOrder = ["BRVM Obligations","Calendrier","Courbes de taux","Dates","Marché secondaire","Mesures","GitHubToken","GitHubFichier","Courbes pente"]
+
+ref table 'BRVM Obligations'
+ref table Calendrier
+ref table 'Courbes de taux'
+ref table Dates
+ref table 'Marché secondaire'
+ref table Mesures
+ref table DateTableTemplate_0901467c-cacd-4026-8810-b00188675510
+ref table LocalDateTable_9db8bb93-85e7-4f78-a9e8-4f68a2fa8ba2
+ref table 'Courbes pente'
+
+ref cultureInfo fr-FR
+

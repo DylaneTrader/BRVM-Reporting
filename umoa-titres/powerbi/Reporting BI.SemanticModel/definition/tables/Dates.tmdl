@@ -1,0 +1,67 @@
+table Dates
+	lineageTag: a5000000-0000-0000-0000-000000000001
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: dd/mm/yyyy
+		lineageTag: a5000000-0000-0000-0000-000000000002
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Année
+		dataType: int64
+		formatString: 0
+		lineageTag: a5000000-0000-0000-0000-000000000003
+		summarizeBy: none
+		sourceColumn: Année
+
+	column Trimestre
+		dataType: string
+		lineageTag: a5000000-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: Trimestre
+
+	column 'Mois (n°)'
+		dataType: int64
+		formatString: 0
+		lineageTag: a5000000-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: Mois (n°)
+
+	column Mois
+		dataType: string
+		lineageTag: a5000000-0000-0000-0000-000000000006
+		summarizeBy: none
+		sourceColumn: Mois
+		sortByColumn: 'Mois (n°)'
+
+	column Année-Mois
+		dataType: string
+		lineageTag: a5000000-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: Année-Mois
+
+	partition Dates = m
+		mode: import
+		source =
+				let
+				    Debut = #date(2014, 1, 1),
+				    Fin = Date.EndOfYear(Date.AddYears(DateTime.Date(DateTime.LocalNow()), 2)),
+				    Nb = Duration.Days(Fin - Debut) + 1,
+				    Liste = List.Dates(Debut, Nb, #duration(1, 0, 0, 0)),
+				    Tab = Table.FromList(Liste, Splitter.SplitByNothing(), {"Date"}),
+				    Typed = Table.TransformColumnTypes(Tab, {{"Date", type date}}),
+				    A1 = Table.AddColumn(Typed, "Année", each Date.Year([Date]), Int64.Type),
+				    A2 = Table.AddColumn(A1, "Trimestre", each "T" & Text.From(Date.QuarterOfYear([Date])), type text),
+				    A3 = Table.AddColumn(A2, "Mois (n°)", each Date.Month([Date]), Int64.Type),
+				    A4 = Table.AddColumn(A3, "Mois", each Date.ToText([Date], [Format="MMMM", Culture="fr-FR"]), type text),
+				    A5 = Table.AddColumn(A4, "Année-Mois", each Date.ToText([Date], [Format="yyyy-MM", Culture="fr-FR"]), type text)
+				in
+				    A5
+
+	annotation PBI_ResultType = Table
+

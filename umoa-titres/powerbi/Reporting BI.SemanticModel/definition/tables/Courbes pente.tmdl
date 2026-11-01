@@ -1,0 +1,73 @@
+table 'Courbes pente'
+	lineageTag: a7000000-0000-0000-0000-000000000001
+
+	column Date
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: a7000000-0000-0000-0000-000000000002
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Pays
+		dataType: string
+		lineageTag: a7000000-0000-0000-0000-000000000003
+		summarizeBy: none
+		sourceColumn: Pays
+
+	column 'Taux 2 ans'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a7000000-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: Taux 2 ans
+
+	column 'Taux 5 ans'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a7000000-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: Taux 5 ans
+
+	column 'Taux 10 ans'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a7000000-0000-0000-0000-000000000006
+		summarizeBy: none
+		sourceColumn: Taux 10 ans
+
+	column 'Pente 2-10 ans (pb)'
+		dataType: double
+		formatString: #,0.0
+		lineageTag: a7000000-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: Pente 2-10 ans (pb)
+
+	column 'Pente 2-5 ans (pb)'
+		dataType: double
+		formatString: #,0.0
+		lineageTag: a7000000-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: Pente 2-5 ans (pb)
+
+	partition 'Courbes pente' = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(GitHubFichier("courbes_pente.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Promu = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Types = Table.TransformColumnTypes(Promu, {
+				        {"Date", type date},
+				        {"Pays", type text},
+				        {"Taux 2 ans", type number},
+				        {"Taux 5 ans", type number},
+				        {"Taux 10 ans", type number},
+				        {"Pente 2-10 ans (pb)", type number},
+				        {"Pente 2-5 ans (pb)", type number}
+				    }, "en-US")
+				in
+				    Types
+
+	annotation PBI_ResultType = Table
+

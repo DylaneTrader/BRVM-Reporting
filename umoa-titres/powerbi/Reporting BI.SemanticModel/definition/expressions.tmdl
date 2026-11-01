@@ -1,0 +1,24 @@
+/// Jeton d'accès GitHub (fine-grained PAT, lecture « Contents » sur ce dépôt privé).
+/// À renseigner dans Power BI : Transformer les données → Gérer les paramètres.
+/// Laisser vide dans le dépôt : la valeur réelle se saisit localement / dans le Service.
+expression GitHubToken = "" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=false]
+	lineageTag: e1000000-0000-0000-0000-000000000001
+	annotation PBI_ResultType = Text
+
+/// Récupère un fichier de data/_bi sur le dépôt privé via l'API Git de GitHub.
+/// Passe par l'arbre (trees) pour obtenir le SHA, puis par les blobs (base64
+/// renvoyé en JSON, sans redirection) — fiable jusqu'à 100 Mo, contrairement à
+/// l'API Contents limitée à 1 Mo. Reste sur api.github.com (base statique).
+expression GitHubFichier =
+		(nomFichier as text) as binary =>
+			let
+			    Racine = "repos/DylaneTrader/Scraper-UMOA-Titres/git/",
+			    EnTetes = [Authorization = "Bearer " & GitHubToken, Accept = "application/vnd.github+json"],
+			    Arbre = Json.Document(Web.Contents("https://api.github.com", [RelativePath = Racine & "trees/main:data/_bi", Headers = EnTetes, Timeout = #duration(0, 0, 5, 0)])),
+			    Cible = List.First(List.Select(Arbre[tree], each [path] = nomFichier)),
+			    Blob = Json.Document(Web.Contents("https://api.github.com", [RelativePath = Racine & "blobs/" & Cible[sha], Headers = EnTetes, Timeout = #duration(0, 0, 5, 0)])),
+			    Contenu = Binary.FromText(Text.Remove(Blob[content], {"#(cr)", "#(lf)"}), BinaryEncoding.Base64)
+			in
+			    Contenu
+	lineageTag: e1000000-0000-0000-0000-000000000002
+	annotation PBI_ResultType = Function

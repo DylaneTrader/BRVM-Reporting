@@ -1,0 +1,263 @@
+table 'Marché secondaire'
+	lineageTag: a1000000-0000-0000-0000-000000000001
+
+	column 'Date de transaction'
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: a1000000-0000-0000-0000-000000000002
+		summarizeBy: none
+		sourceColumn: Date de transaction
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Instrument
+		dataType: string
+		lineageTag: a1000000-0000-0000-0000-000000000003
+		summarizeBy: none
+		sourceColumn: Instrument
+
+	column Émetteur
+		dataType: string
+		lineageTag: a1000000-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: Émetteur
+
+	column ISIN
+		dataType: string
+		lineageTag: a1000000-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: ISIN
+
+	column 'Mode amortissement'
+		dataType: string
+		lineageTag: a1000000-0000-0000-0000-000000000006
+		summarizeBy: none
+		sourceColumn: Mode amortissement
+
+	column 'Durée résiduelle'
+		dataType: string
+		lineageTag: a1000000-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: Durée résiduelle
+
+	column Encours
+		dataType: double
+		formatString: #,0
+		lineageTag: a1000000-0000-0000-0000-000000000008
+		summarizeBy: sum
+		sourceColumn: Encours
+
+	column 'Ratio d''échange'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a1000000-0000-0000-0000-000000000009
+		summarizeBy: sum
+		sourceColumn: Ratio d'échange
+
+		annotation SummarizationSetBy = Automatic
+
+	column Coupon
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a1000000-0000-0000-0000-000000000010
+		summarizeBy: sum
+		sourceColumn: Coupon
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Date d''échéance'
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: a1000000-0000-0000-0000-000000000011
+		summarizeBy: none
+		sourceColumn: Date d'échéance
+
+		variation Variation
+			isDefault
+			relationship: 9d0bd9ba-5075-4fdb-9510-6d0c60a317fd
+			defaultHierarchy: LocalDateTable_9db8bb93-85e7-4f78-a9e8-4f68a2fa8ba2.'Hiérarchie de dates'
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Quantité
+		dataType: double
+		formatString: #,0
+		lineageTag: a1000000-0000-0000-0000-000000000012
+		summarizeBy: sum
+		sourceColumn: Quantité
+
+	column 'Prix moyen'
+		dataType: double
+		formatString: 0.0000
+		lineageTag: a1000000-0000-0000-0000-000000000013
+		summarizeBy: sum
+		sourceColumn: Prix moyen
+
+		annotation SummarizationSetBy = Automatic
+
+	column Spread
+		dataType: double
+		lineageTag: a1000000-0000-0000-0000-000000000014
+		summarizeBy: sum
+		sourceColumn: Spread
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Rendement moyen'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a1000000-0000-0000-0000-000000000015
+		summarizeBy: sum
+		sourceColumn: Rendement moyen
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Nombre de transactions'
+		dataType: int64
+		formatString: #,0
+		lineageTag: a1000000-0000-0000-0000-000000000016
+		summarizeBy: sum
+		sourceColumn: Nombre de transactions
+
+	column 'Coupon couru'
+		dataType: double
+		lineageTag: a1000000-0000-0000-0000-000000000017
+		summarizeBy: sum
+		sourceColumn: Coupon couru
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Volume nominal échangé'
+		dataType: double
+		formatString: #,0
+		lineageTag: a1000000-0000-0000-0000-000000000018
+		summarizeBy: sum
+		sourceColumn: Volume nominal échangé
+
+	column 'Intérêt couru'
+		dataType: double
+		formatString: #,0
+		lineageTag: a1000000-0000-0000-0000-000000000019
+		summarizeBy: sum
+		sourceColumn: Intérêt couru
+
+	column 'Volume global échangé'
+		dataType: double
+		formatString: #,0
+		lineageTag: a1000000-0000-0000-0000-000000000020
+		summarizeBy: sum
+		sourceColumn: Volume global échangé
+
+	column Année
+		dataType: int64
+		formatString: 0
+		lineageTag: a1000000-0000-0000-0000-000000000021
+		summarizeBy: sum
+		sourceColumn: Année
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Volume global (Mds FCFA)'
+		dataType: double
+		formatString: #,0.0
+		lineageTag: a1000000-0000-0000-0000-000000000022
+		summarizeBy: sum
+		sourceColumn: Volume global (Mds FCFA)
+
+	column 'Maturité résiduelle (années)'
+		dataType: double
+		formatString: 0.00
+		lineageTag: a1000000-0000-0000-0000-000000000023
+		summarizeBy: none
+		sourceColumn: Maturité résiduelle (années)
+
+	column YTM
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a1000000-0000-0000-0000-000000000024
+		summarizeBy: none
+		sourceColumn: YTM
+
+	column 'Duration Macaulay'
+		dataType: double
+		formatString: 0.00
+		lineageTag: a1000000-0000-0000-0000-000000000025
+		summarizeBy: none
+		sourceColumn: Duration Macaulay
+
+	column 'Duration modifiée'
+		dataType: double
+		formatString: 0.00
+		lineageTag: a1000000-0000-0000-0000-000000000026
+		summarizeBy: none
+		sourceColumn: Duration modifiée
+
+	column Convexité
+		dataType: double
+		formatString: 0.00
+		lineageTag: a1000000-0000-0000-0000-000000000027
+		summarizeBy: none
+		sourceColumn: Convexité
+
+	column 'DV01 (FCFA / M nominal)'
+		dataType: double
+		formatString: #,0.00
+		lineageTag: a1000000-0000-0000-0000-000000000028
+		summarizeBy: none
+		sourceColumn: DV01 (FCFA / M nominal)
+
+	column 'Sensibilité +100pb'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a1000000-0000-0000-0000-000000000029
+		summarizeBy: none
+		sourceColumn: Sensibilité +100pb
+
+	column Méthode
+		dataType: string
+		lineageTag: a1000000-0000-0000-0000-000000000030
+		summarizeBy: none
+		sourceColumn: Méthode
+
+	partition 'Marché secondaire' = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(GitHubFichier("marche_secondaire.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Promu = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Types = Table.TransformColumnTypes(Promu, {
+				        {"Date de transaction", type date},
+				        {"Instrument", type text},
+				        {"Émetteur", type text},
+				        {"ISIN", type text},
+				        {"Mode amortissement", type text},
+				        {"Durée résiduelle", type text},
+				        {"Encours", type number},
+				        {"Ratio d'échange", type number},
+				        {"Coupon", type number},
+				        {"Date d'échéance", type date},
+				        {"Quantité", type number},
+				        {"Prix moyen", type number},
+				        {"Spread", type number},
+				        {"Rendement moyen", type number},
+				        {"Nombre de transactions", Int64.Type},
+				        {"Coupon couru", type number},
+				        {"Volume nominal échangé", type number},
+				        {"Intérêt couru", type number},
+				        {"Volume global échangé", type number},
+				        {"Année", Int64.Type},
+				        {"Volume global (Mds FCFA)", type number},
+				        {"Maturité résiduelle (années)", type number},
+				        {"YTM", type number},
+				        {"Duration Macaulay", type number},
+				        {"Duration modifiée", type number},
+				        {"Convexité", type number},
+				        {"DV01 (FCFA / M nominal)", type number},
+				        {"Sensibilité +100pb", type number},
+				        {"Méthode", type text}
+				    }, "en-US")
+				in
+				    Types
+
+	annotation PBI_ResultType = Table
+

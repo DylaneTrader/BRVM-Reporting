@@ -1,0 +1,94 @@
+table 'BRVM Obligations'
+	lineageTag: a4000000-0000-0000-0000-000000000001
+
+	column 'Date de cotation'
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: a4000000-0000-0000-0000-000000000002
+		summarizeBy: none
+		sourceColumn: Date de cotation
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Code obligation'
+		dataType: string
+		lineageTag: a4000000-0000-0000-0000-000000000003
+		summarizeBy: none
+		sourceColumn: Code obligation
+
+	column Nom
+		dataType: string
+		lineageTag: a4000000-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: Nom
+
+	column 'Date d''émission'
+		dataType: string
+		lineageTag: a4000000-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: Date d'émission
+
+	column 'Date de maturité'
+		dataType: string
+		lineageTag: a4000000-0000-0000-0000-000000000006
+		summarizeBy: none
+		sourceColumn: Date de maturité
+
+	column 'Cours du jour'
+		dataType: double
+		formatString: #,0.00
+		lineageTag: a4000000-0000-0000-0000-000000000007
+		summarizeBy: none
+		sourceColumn: Cours du jour
+
+	column 'Coupon couru'
+		dataType: double
+		formatString: #,0.00
+		lineageTag: a4000000-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: Coupon couru
+
+	column 'Dernier paiement'
+		dataType: string
+		lineageTag: a4000000-0000-0000-0000-000000000009
+		summarizeBy: none
+		sourceColumn: Dernier paiement
+
+	column 'Taux facial'
+		dataType: double
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: a4000000-0000-0000-0000-000000000010
+		summarizeBy: none
+		sourceColumn: Taux facial
+
+	column Catégorie
+		dataType: string
+		lineageTag: a4000000-0000-0000-0000-000000000011
+		summarizeBy: none
+		sourceColumn: Catégorie
+
+	partition 'BRVM Obligations' = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(GitHubFichier("brvm_obligations.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Promu = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Types = Table.TransformColumnTypes(Promu, {
+				        {"Date de cotation", type date},
+				        {"Code obligation", type text},
+				        {"Nom", type text},
+				        {"Date d'émission", type text},
+				        {"Date de maturité", type text},
+				        {"Cours du jour", type number},
+				        {"Coupon couru", type number},
+				        {"Dernier paiement", type text},
+				        {"Taux facial", type number},
+				        {"Catégorie", type text}
+				    }, "en-US")
+				in
+				    Types
+
+	annotation PBI_ResultType = Exception
+
+	annotation PBI_NavigationStepName = Navigation
+

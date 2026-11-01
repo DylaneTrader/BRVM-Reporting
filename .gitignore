@@ -16,3 +16,8 @@ out/
 # OS
 .DS_Store
 Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/

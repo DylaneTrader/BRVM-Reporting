@@ -1,0 +1,84 @@
+table Calendrier
+	lineageTag: a2000000-0000-0000-0000-000000000001
+
+	column Date
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		lineageTag: a2000000-0000-0000-0000-000000000002
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Statut
+		dataType: string
+		lineageTag: a2000000-0000-0000-0000-000000000003
+		summarizeBy: none
+		sourceColumn: Statut
+
+	column Pays
+		dataType: string
+		lineageTag: a2000000-0000-0000-0000-000000000004
+		summarizeBy: none
+		sourceColumn: Pays
+
+	column Instrument
+		dataType: string
+		lineageTag: a2000000-0000-0000-0000-000000000005
+		summarizeBy: none
+		sourceColumn: Instrument
+
+	column Titre
+		dataType: string
+		lineageTag: a2000000-0000-0000-0000-000000000006
+		summarizeBy: none
+		sourceColumn: Titre
+
+	column Lien
+		dataType: string
+		lineageTag: a2000000-0000-0000-0000-000000000007
+		dataCategory: WebUrl
+		summarizeBy: none
+		sourceColumn: Lien
+
+	column Identifiant
+		dataType: string
+		lineageTag: a2000000-0000-0000-0000-000000000008
+		summarizeBy: none
+		sourceColumn: Identifiant
+
+	column 'Dernière modification'
+		dataType: string
+		lineageTag: a2000000-0000-0000-0000-000000000009
+		summarizeBy: none
+		sourceColumn: Dernière modification
+
+	column Année
+		dataType: int64
+		formatString: 0
+		lineageTag: a2000000-0000-0000-0000-000000000010
+		summarizeBy: none
+		sourceColumn: Année
+
+	partition Calendrier = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(GitHubFichier("calendrier_emissions.csv"), [Delimiter=",", Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    Promu = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    Types = Table.TransformColumnTypes(Promu, {
+				        {"Date", type date},
+				        {"Statut", type text},
+				        {"Pays", type text},
+				        {"Instrument", type text},
+				        {"Titre", type text},
+				        {"Lien", type text},
+				        {"Identifiant", type text},
+				        {"Dernière modification", type text},
+				        {"Année", Int64.Type}
+				    }, "en-US")
+				in
+				    Types
+
+	annotation PBI_ResultType = Table
+

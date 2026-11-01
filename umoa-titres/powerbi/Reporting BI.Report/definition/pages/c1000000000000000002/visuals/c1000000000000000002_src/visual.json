@@ -1,0 +1,39 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "c1000000000000000002_src",
+  "position": {
+    "x": 16.388140161725065,
+    "y": 680.53908355795147,
+    "z": 8000,
+    "height": 39.676549865229106,
+    "width": 708.1401617250674,
+    "tabOrder": 8000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Source : UMOA-Titres — Données du marché secondaire (umoatitres.org/fr/donnees-du-marche-secondaire). Saisie amont différée de quelques jours.",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "9px",
+                      "color": "#8a94a8",
+                      "italic": true
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

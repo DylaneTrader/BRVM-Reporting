@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+  "name": "c1000000000000000006_src",
+  "position": {
+    "x": 16.388140161725065,
+    "y": 684.85175202156336,
+    "z": 8000,
+    "height": 35.363881401617249,
+    "width": 603.7735849056603,
+    "tabOrder": 8000
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "Source : UMOA-Titres — Courbe des taux (umoatitres.org). Taux de référence = dernier point de courbe de l'année de référence.",
+                    "textStyle": {
+                      "fontFamily": "Segoe UI",
+                      "fontSize": "9px",
+                      "color": "#8a94a8"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
