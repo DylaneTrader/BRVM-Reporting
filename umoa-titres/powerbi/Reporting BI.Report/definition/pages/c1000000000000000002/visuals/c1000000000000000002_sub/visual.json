@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
   "name": "c1000000000000000002_sub",
   "position": {
-    "x": 15.960591133004927,
-    "y": 72.709359605911331,
+    "x": 204,
+    "y": 39,
     "z": 6000,
-    "height": 39.901477832512313,
-    "width": 1247.5862068965516,
+    "height": 34,
+    "width": 1060,
     "tabOrder": 6000
   },
   "visual": {
@@ -22,8 +22,8 @@
                     "value": "Transactions, volumes et rendements — source UMOA-Titres",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
-                      "fontSize": "12px",
-                      "color": "#5b6b8c"
+                      "fontSize": "11px",
+                      "color": "#FFFFFF"
                     }
                   }
                 ]

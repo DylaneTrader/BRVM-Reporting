@@ -11,7 +11,7 @@
       "type": "SharedResources"
     },
     "customTheme": {
-      "name": "CGFGestion.json",
+      "name": "Simple-Header---Blue.json",
       "reportVersionAtImport": {
         "visual": "2.9.0",
         "report": "3.3.0",
@@ -65,14 +65,44 @@
       "type": "RegisteredResources",
       "items": [
         {
-          "name": "cgf.png",
-          "path": "cgf.png",
+          "name": "Simple-Header---Blue.json",
+          "path": "Simple-Header---Blue.json",
+          "type": "CustomTheme"
+        },
+        {
+          "name": "Cut-Bottom-Round.svg",
+          "path": "Cut-Bottom-Round.svg",
           "type": "Image"
         },
         {
-          "name": "CGFGestion.json",
-          "path": "CGFGestion.json",
-          "type": "CustomTheme"
+          "name": "Cut-Bottom-Square.svg",
+          "path": "Cut-Bottom-Square.svg",
+          "type": "Image"
+        },
+        {
+          "name": "Cut-Left-Round.svg",
+          "path": "Cut-Left-Round.svg",
+          "type": "Image"
+        },
+        {
+          "name": "Cut-Left-Square.svg",
+          "path": "Cut-Left-Square.svg",
+          "type": "Image"
+        },
+        {
+          "name": "Cut-Right-Round.svg",
+          "path": "Cut-Right-Round.svg",
+          "type": "Image"
+        },
+        {
+          "name": "Cut-Right-Square.svg",
+          "path": "Cut-Right-Square.svg",
+          "type": "Image"
+        },
+        {
+          "name": "Overview.svg",
+          "path": "Overview.svg",
+          "type": "Image"
         }
       ]
     }

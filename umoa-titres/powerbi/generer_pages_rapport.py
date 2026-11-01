@@ -20,9 +20,10 @@ SCH_VISUAL = "https://developer.microsoft.com/json-schemas/fabric/item/report/de
 SCH_PAGE = "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json"
 SCH_PAGES = "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.1.0/schema.json"
 
-NAVY = "#08306B"
-BLEU = "#0B5CAB"
-BLEU_CLAIR = "#1C86D1"
+# Couleurs du thème « Simple Header - Blue » (outils/theme_simple_header_blue).
+NAVY = "#1F2F4C"
+BLEU = "#2C4770"
+BLEU_CLAIR = "#3B5E94"
 GRIS = "#5B6B8C"
 FONT = "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif"
 
@@ -141,10 +142,12 @@ def chart(name, x, y, w, h, vtype, roles, title=None, color=None, tab=0):
         vis["objects"] = objects
     return container(name, x, y, w, h, vis, tab=tab)
 
-def slicer(name, x, y, w, h, entity, prop, title=None, tab=0):
+def slicer(name, x, y, w, h, entity, prop, title=None, tab=0, mode=None):
     objects = {}
     if title:
         objects.update(title_obj(title, size=11))
+    if mode:  # "Between" (plage numérique), "Dropdown" (liste déroulante)
+        objects["data"] = [{"properties": {"mode": lit_str(mode)}}]
     vis = {
         "visualType": "slicer",
         "query": {"queryState": {"Values": {"projections": [pcol(entity, prop)]}}},
@@ -190,13 +193,13 @@ def scatter(name, x, y, w, h, details, x_field, y_field, size_field=None, title=
 
 
 def header(page_id, titre, sous_titre):
-    """Bandeau navy + sous-titre gris."""
+    """Titre et sous-titre en blanc dans le bandeau du fond de page (thème Simple Header - Blue :
+    bande haute 0-37, bande basse 37-75, pavé gauche 0-192)."""
     v = []
-    v.append(textbox(f"{page_id}_hdr", 16, 16, 1248, 56,
-                     [run(titre, size=24, bold=True, color="#FFFFFF")],
-                     bg=NAVY))
-    v.append(textbox(f"{page_id}_sub", 16, 76, 1248, 24,
-                     [run(sous_titre, size=12, bold=False, color=GRIS)]))
+    v.append(textbox(f"{page_id}_hdr", 204, 2, 1060, 34,
+                     [run(titre, size=18, bold=True, color="#FFFFFF")]))
+    v.append(textbox(f"{page_id}_sub", 204, 39, 1060, 34,
+                     [run(sous_titre, size=11, bold=False, color="#FFFFFF")]))
     return v
 
 # ---------- écriture ----------
@@ -211,6 +214,15 @@ def write_page(page_id, display_name, order, visuals):
         "displayOption": "FitToPage",
         "height": 720,
         "width": 1280,
+        "objects": {"background": [{"properties": {
+            "image": {"image": {
+                "name": lit_str("Overview"),
+                "url": {"expr": {"ResourcePackageItem": {
+                    "PackageName": "RegisteredResources", "PackageType": 1,
+                    "ItemName": "Overview.svg"}}},
+                "scaling": lit_str("Normal")}},
+            "transparency": lit_num(0),
+            "color": solid(lit_str("#d2d2d2"))}}]},
     }
     (pdir / "page.json").write_text(json.dumps(page, indent=2, ensure_ascii=False), encoding="utf-8")
     for vis in visuals:
@@ -237,8 +249,8 @@ pages_order = []
 # ===================== PAGE 1 — ACCUEIL =====================
 pid = "8a77cf6ff99605e409b3"
 v = header(pid, "Rapport de marché — Titres publics UEMOA & BRVM",
-           "CGF Gestion · Tableau de bord destiné aux gestionnaires de portefeuilles")
-v.append(card(f"{pid}_maj", 1004, 20, 260, 48, M, "Texte mise à jour"))
+           "Tableau de bord destiné aux gestionnaires de portefeuilles")
+v.append(card(f"{pid}_maj", 6, 6, 180, 62, M, "Texte mise à jour"))
 kpis = [
     ("Volume global (Mds FCFA)", "kpi1"),
     ("Nb transactions", "kpi2"),
@@ -275,7 +287,14 @@ v = header(pid, "Marché secondaire des titres publics",
 v.append(slicer(f"{pid}_slc_annee", 16, 116, 200, 120, D, "Année", title="Année"))
 v.append(slicer(f"{pid}_slc_pays", 16, 244, 200, 220, MS, "Émetteur", title="Émetteur"))
 v.append(slicer(f"{pid}_slc_instr", 16, 472, 200, 160, MS, "Instrument", title="Instrument"))
-v.append(chart(f"{pid}_line", 232, 116, 1032, 240, "lineChart",
+# Traitement du marché secondaire, réglable : profondeur, fiabilité du prix, doublons.
+v.append(slicer(f"{pid}_slc_nbtx", 232, 104, 340, 52, MS, "Nombre de transactions",
+                title="Nombre de transactions (plage)", mode="Between"))
+v.append(slicer(f"{pid}_slc_score", 578, 104, 340, 52, MS, "Score qualité",
+                title="Score de fiabilité du prix", mode="Dropdown"))
+v.append(slicer(f"{pid}_slc_doublon", 924, 104, 340, 52, MS, "Doublon",
+                title="Doublon (Faux = lignes uniques)", mode="Dropdown"))
+v.append(chart(f"{pid}_line", 232, 162, 1032, 194, "lineChart",
                {"Category": {"projections": [pcol(D, "Année-Mois")]},
                 "Y": {"projections": [pmeasure(M, "Volume global (Mds FCFA)")]}},
                title="Évolution du volume échangé (Mds FCFA)", color=BLEU))

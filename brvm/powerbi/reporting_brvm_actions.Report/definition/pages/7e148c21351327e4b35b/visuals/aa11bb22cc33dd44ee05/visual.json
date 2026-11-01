@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
   "name": "aa11bb22cc33dd44ee05",
   "position": {
-    "x": 0,
-    "y": 74.4186046511628,
+    "x": 204,
+    "y": 39,
     "z": 3000,
-    "height": 35.896032831737351,
-    "width": 1280,
+    "height": 34,
+    "width": 1060,
     "tabOrder": 4000
   },
   "visual": {
@@ -19,10 +19,10 @@
               {
                 "textRuns": [
                   {
-                    "value": "CGF Gestion · BRVM Analytics : tableau de bord destiné aux gestionnaires de portefeuilles",
+                    "value": "BRVM Analytics : tableau de bord destiné aux gestionnaires de portefeuilles",
                     "textStyle": {
-                      "fontSize": "10pt",
-                      "color": "#5A6B87"
+                      "fontSize": "11px",
+                      "color": "#FFFFFF"
                     }
                   }
                 ]

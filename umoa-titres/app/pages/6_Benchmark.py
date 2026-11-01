@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Benchmark obligataire — indice composite 30 % coté / 70 % non coté.
+"""Benchmark obligataire : indices coté et non coté, et leur composite à pondération libre.
 
 Base 100 au 31/12/2019. Les limites méthodologiques connues sont affichées dans
 la page, pas reléguées en annexe : elles conditionnent la lecture de toute
@@ -35,24 +35,39 @@ if serie.empty:
              "`python scripts/construire_benchmark.py` pour le régénérer.")
     st.stop()
 
-st.caption(f"Indice CGF Gestion, base 100 au {serie['Date'].iloc[0]:%d/%m/%Y} — "
+st.caption(f"Benchmark obligataire, base 100 au {serie['Date'].iloc[0]:%d/%m/%Y} — "
            f"dernière valeur au {serie['Date'].iloc[-1]:%d/%m/%Y}.")
 
+LIBELLE = None  # fixé après le choix de la part du coté
+NOMS: dict = {}
+
 with st.sidebar:
+    st.header("Composition")
+    part_cote = st.slider(
+        "Part de l'indice coté (%)", 0, 100, 30, 5,
+        help="0 : non coté seul ; 100 : coté seul. Les deux sous-indices sont construits "
+             "automatiquement à chaque actualisation de Scraper-UMOA-Titres (le non coté sur les "
+             "adjudications retenues) ; seule leur pondération change ici, mois par mois.")
+    poids_cote = part_cote / 100
+    LIBELLE = benchmark.libelle_composite(poids_cote)
+    NOMS["Indice obligataire (30/70)"] = LIBELLE
     st.header("Périmètre")
     annees = sorted(serie["Date"].dt.year.unique())
     debut, fin = st.select_slider("Période", annees, value=(annees[0], annees[-1]))
     indices = st.multiselect("Indices affichés", list(benchmark.INDICES),
-                             default=list(benchmark.INDICES))
+                             default=list(benchmark.INDICES),
+                             format_func=lambda k: NOMS.get(k, k))
     rebase = st.toggle(
         "Rebaser à 100 en début de période", value=False,
         help="Utile pour comparer les trajectoires sur une sous-période sans "
              "l'effet du niveau accumulé depuis 2019.")
-    poids_cote = st.slider(
-        "Poids du compartiment coté", 0.0, 1.0, 0.30, 0.05,
-        help="Sert uniquement à la décomposition affichée. L'indice publié "
-             "reste construit à 30 / 70 — c'est précisément la limite n° 4 "
-             "documentée ci-dessous.")
+
+# Le composite est recomposé à la part choisie ; les colonnes internes gardent leur nom.
+COMPOSITE = benchmark.composite(serie, poids_cote)
+serie = serie.copy()
+serie["Indice obligataire (30/70)"] = COMPOSITE["Indice"].to_numpy()
+serie["Rendement obligataire"] = COMPOSITE["Rendement"].to_numpy()
+COULEURS = {NOMS.get(k, k): c for k, c in benchmark.INDICES.items()}
 
 periode = serie[serie["Date"].dt.year.between(debut, fin)].reset_index(drop=True)
 if periode.empty:
@@ -66,7 +81,7 @@ synthese = benchmark.resume(periode)
 # --------------------------------------------------------------------------
 cartes = st.columns(5)
 cartes[0].metric(
-    "Indice composite",
+    LIBELLE,
     f"{synthese['Indice obligataire (30/70) — niveau']:.2f}",
     help="Niveau au dernier mois de la période.")
 cartes[1].metric(
@@ -86,8 +101,8 @@ if synthese["Mois sans cotation BRVM"]:
     st.warning(
         f"**{synthese['Mois sans cotation BRVM']} mois** de la période n'ont pas "
         "de bulletin BRVM exploitable. Sur ces mois, le composite se replie sur "
-        "le seul indice non coté : le poids de 30 % du coté n'est pas appliqué, "
-        "il est reporté sur le non coté. Ces mois sont signalés dans le "
+        f"le seul indice non coté : la part de {poids_cote:.0%} du coté n'est pas appliquée, "
+        "elle est reportée sur le non coté (l'indice coté seul reste à son niveau). Ces mois sont signalés dans le "
         "graphique des contributions.")
 
 onglets = st.tabs(["Trajectoire", "Rendements", "Contributions",
@@ -107,6 +122,7 @@ with onglets[0]:
                 if base:
                     trace[indice] = trace[indice] / base * 100
         longue = trace.melt(id_vars="Date", var_name="Indice", value_name="Niveau")
+        longue["Indice"] = longue["Indice"].replace(NOMS)
         st.altair_chart(
             alt.Chart(longue).mark_line().encode(
                 x=alt.X("Date:T", title=None),
@@ -114,8 +130,8 @@ with onglets[0]:
                         scale=alt.Scale(zero=False)),
                 color=alt.Color("Indice:N", title=None,
                                 scale=alt.Scale(
-                                    domain=list(benchmark.INDICES),
-                                    range=list(benchmark.INDICES.values()))),
+                                    domain=list(COULEURS),
+                                    range=list(COULEURS.values()))),
                 tooltip=["Indice", alt.Tooltip("Date:T", format="%m/%Y"),
                          alt.Tooltip("Niveau:Q", format=".2f")],
             ).properties(height=420,
@@ -147,7 +163,8 @@ with onglets[0]:
 # --------------------------------------------------------------------------
 with onglets[1]:
     mensuels = benchmark.rendements_mensuels(periode)
-    mensuels = mensuels[mensuels["Indice"].isin(indices)]
+    mensuels = mensuels[mensuels["Indice"].isin(indices)].copy()
+    mensuels["Indice"] = mensuels["Indice"].replace(NOMS)
     if mensuels.empty:
         st.info("Aucun rendement sur ce périmètre.")
     else:
@@ -157,8 +174,8 @@ with onglets[1]:
                 y=alt.Y("Rendement:Q", axis=alt.Axis(format="%")),
                 color=alt.Color("Indice:N", title=None,
                                 scale=alt.Scale(
-                                    domain=list(benchmark.INDICES),
-                                    range=list(benchmark.INDICES.values()))),
+                                    domain=list(COULEURS),
+                                    range=list(COULEURS.values()))),
                 xOffset=alt.XOffset("Indice:N"),
                 tooltip=["Indice", alt.Tooltip("Date:T", format="%m/%Y"),
                          alt.Tooltip("Rendement:Q", format=".3%")],
@@ -237,14 +254,26 @@ with onglets[3]:
                 "performances annuelles en proviennent.")
     else:
         filtrees = annuelles[annuelles["Année"].between(debut, fin)]
+        # Le classeur publie le 30/70 : la ligne du composite est recalculée à la part choisie.
+        comp = COMPOSITE.assign(Année=COMPOSITE["Date"].dt.year)
+        comp = comp[comp["Année"].between(max(debut, 2020), fin)]
+        recalcul = comp.groupby("Année").agg(
+            Performance=("Rendement", lambda x: (1 + x).prod() - 1),
+            **{"Volatilité annualisée": ("Rendement", lambda x: x.std() * np.sqrt(12)),
+               "Mois observés": ("Rendement", "size"),
+               "Valeur fin d'année": ("Indice", "last")}).reset_index()
+        recalcul.insert(1, "Indice", LIBELLE)
+        filtrees = pd.concat([recalcul, filtrees[filtrees["Indice"] != "Indice obligataire (30/70)"]],
+                             ignore_index=True)[[c for c in filtrees.columns]]
+        filtrees["Indice"] = filtrees["Indice"].replace(NOMS)
         st.altair_chart(
             alt.Chart(filtrees).mark_bar().encode(
                 x=alt.X("Année:O", title=None),
                 y=alt.Y("Performance:Q", axis=alt.Axis(format="%")),
                 color=alt.Color("Indice:N", title=None,
                                 scale=alt.Scale(
-                                    domain=list(benchmark.INDICES),
-                                    range=list(benchmark.INDICES.values()))),
+                                    domain=list(COULEURS),
+                                    range=list(COULEURS.values()))),
                 xOffset=alt.XOffset("Indice:N"),
                 tooltip=["Indice", "Année",
                          alt.Tooltip("Performance:Q", format=".2%"),

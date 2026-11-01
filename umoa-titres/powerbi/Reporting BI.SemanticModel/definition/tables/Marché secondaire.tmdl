@@ -219,6 +219,42 @@ table 'Marché secondaire'
 		summarizeBy: none
 		sourceColumn: Méthode
 
+	column Doublon
+		dataType: boolean
+		lineageTag: a1000000-0000-0000-0000-000000000031
+		summarizeBy: none
+		sourceColumn: Doublon
+
+	column 'Rendement nul ou négatif'
+		dataType: boolean
+		lineageTag: a1000000-0000-0000-0000-000000000032
+		summarizeBy: none
+		sourceColumn: Rendement nul ou négatif
+
+	column 'Score qualité'
+		dataType: string
+		lineageTag: a1000000-0000-0000-0000-000000000033
+		summarizeBy: none
+		sourceColumn: Score qualité
+
+	column 'Écart courbe (pb)'
+		dataType: double
+		formatString: 0.0
+		lineageTag: a1000000-0000-0000-0000-000000000034
+		summarizeBy: none
+		sourceColumn: Écart courbe (pb)
+
+		annotation SummarizationSetBy = User
+
+	column 'Écart adjudication (pb)'
+		dataType: double
+		formatString: 0.0
+		lineageTag: a1000000-0000-0000-0000-000000000035
+		summarizeBy: none
+		sourceColumn: Écart adjudication (pb)
+
+		annotation SummarizationSetBy = User
+
 	partition 'Marché secondaire' = m
 		mode: import
 		source =
@@ -254,7 +290,12 @@ table 'Marché secondaire'
 				        {"Convexité", type number},
 				        {"DV01 (FCFA / M nominal)", type number},
 				        {"Sensibilité +100pb", type number},
-				        {"Méthode", type text}
+				        {"Méthode", type text},
+				        {"Doublon", type logical},
+				        {"Rendement nul ou négatif", type logical},
+				        {"Score qualité", type text},
+				        {"Écart courbe (pb)", type number},
+				        {"Écart adjudication (pb)", type number}
 				    }, "en-US")
 				in
 				    Types

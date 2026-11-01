@@ -203,7 +203,7 @@ with st.sidebar:
         help="Nominal résiduel détenu ou visé. Sert à convertir prix et "
              "sensibilités en francs.")
     niveau = st.selectbox(
-        "Courbe de référence", [courbes.NIVEAU_OFFICIELLE, courbes.NIVEAU_CGF,
+        "Courbe de référence", [courbes.NIVEAU_OFFICIELLE, courbes.NIVEAU_RECONSTRUITE,
                                 courbes.NIVEAU_BRUT],
         format_func=courbes.LIBELLES_NIVEAUX.get)
 

@@ -1,0 +1,53 @@
+/// Jeton d'accès GitHub (fine-grained PAT, lecture « Contents » seule sur DylaneTrader/Scraper-BRVM).
+/// Facultatif (dépôt public) mais nécessaire en pratique : sans jeton, 60 appels par heure seulement.
+/// À renseigner dans Power BI : Transformer les données → Gérer les paramètres → GitHubToken.
+/// Laisser vide dans le dépôt : la valeur réelle se saisit localement et dans le Service.
+expression GitHubToken = "" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=false]
+	lineageTag: e2000000-0000-0000-0000-000000000001
+
+	annotation PBI_ResultType = Text
+
+/// Lit le contenu d'un blob Git de DylaneTrader/Scraper-BRVM par son SHA (base64 renvoyé en JSON,
+/// fiable jusqu'à 100 Mo, contrairement à l'API Contents limitée à 1 Mo). Base statique api.github.com.
+expression GitHubBlob =
+		(sha as text) as binary =>
+			let
+			    EnTetes = if GitHubToken = "" then [Accept = "application/vnd.github+json"]
+			              else [Authorization = "Bearer " & GitHubToken, Accept = "application/vnd.github+json"],
+			    Blob = Json.Document(Web.Contents("https://api.github.com", [RelativePath = "repos/DylaneTrader/Scraper-BRVM/git/blobs/" & sha, Headers = EnTetes, Timeout = #duration(0, 0, 5, 0)]))
+			in
+			    Binary.FromText(Text.Remove(Blob[content], {"#(cr)", "#(lf)"}), BinaryEncoding.Base64)
+	lineageTag: e2000000-0000-0000-0000-000000000002
+
+	annotation PBI_ResultType = Function
+
+/// Remplace Folder.Files sur un dossier de data/ de Scraper-BRVM (branche main) : une ligne par
+/// fichier dont le nom finit par « suffixe », colonnes Name et Content. Seuls ces fichiers sont lus.
+expression GitHubDossier =
+		(dossier as text, suffixe as text) as table =>
+			let
+			    EnTetes = if GitHubToken = "" then [Accept = "application/vnd.github+json"]
+			              else [Authorization = "Bearer " & GitHubToken, Accept = "application/vnd.github+json"],
+			    Arbre = Json.Document(Web.Contents("https://api.github.com", [RelativePath = "repos/DylaneTrader/Scraper-BRVM/git/trees/main:" & dossier, Headers = EnTetes, Timeout = #duration(0, 0, 5, 0)])),
+			    Fichiers = List.Select(Arbre[tree], (f) => f[type] = "blob" and Text.EndsWith(f[path], suffixe)),
+			    Lignes = List.Transform(Fichiers, (f) => [Name = f[path], Content = GitHubBlob(f[sha])])
+			in
+			    Table.FromRecords(Lignes, type table [Name = text, Content = binary])
+	lineageTag: e2000000-0000-0000-0000-000000000003
+
+	annotation PBI_ResultType = Function
+
+/// Remplace File.Contents : un fichier de Scraper-BRVM par son chemin depuis la racine du dépôt,
+/// par exemple "data/news/actualites_brvm.csv".
+expression GitHubFichier =
+		(chemin as text) as binary =>
+			let
+			    Dossier = Text.BeforeDelimiter(chemin, "/", {0, RelativePosition.FromEnd}),
+			    Nom = Text.AfterDelimiter(chemin, "/", {0, RelativePosition.FromEnd}),
+			    Trouve = GitHubDossier(Dossier, Nom),
+			    Cible = Table.SelectRows(Trouve, each [Name] = Nom)
+			in
+			    if Table.RowCount(Cible) = 1 then Cible{0}[Content] else error "Fichier absent de Scraper-BRVM : " & chemin
+	lineageTag: e2000000-0000-0000-0000-000000000004
+
+	annotation PBI_ResultType = Function

@@ -83,8 +83,7 @@ table Dividendes
 		mode: import
 		source =
 				let
-				    CheminDonnees = "c:\Users\DYLANE\OneDrive - CGF BOURSE\Bureau\MES MINI-APPS\BRVM app\data",
-				    Source = Csv.Document(File.Contents(CheminDonnees & "\dividendes\dividendes.csv"), [Delimiter = ";", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Source = Csv.Document(GitHubFichier("data/dividendes/dividendes.csv"), [Delimiter = ";", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
 				    EnTetes = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
 				    DateScrap = Table.TransformColumnTypes(EnTetes, {{"Date_Scraping", type date}}, "en-US"),
 				    AjoutDetachement = Table.AddColumn(DateScrap, "DateDetachement", each try Date.From([Date_Detachement], "en-US") otherwise null, type date),

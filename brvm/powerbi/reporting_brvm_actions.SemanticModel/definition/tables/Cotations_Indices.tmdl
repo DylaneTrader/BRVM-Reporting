@@ -69,8 +69,7 @@ table Cotations_Indices
 		mode: import
 		source =
 				let
-				    CheminDonnees = "c:\Users\DYLANE\OneDrive - CGF BOURSE\Bureau\MES MINI-APPS\BRVM app\data",
-				    Source = Folder.Files(CheminDonnees & "\indices"),
+				    Source = GitHubDossier("data/indices", "_historique.csv"),
 				    FichiersHistorique = Table.SelectRows(Source, each Text.EndsWith([Name], "_historique.csv")),
 				    AjoutSymbol = Table.AddColumn(FichiersHistorique, "Symbol", each Text.BeforeDelimiter([Name], "_historique.csv"), type text),
 				    AjoutData = Table.AddColumn(AjoutSymbol, "Data", each Table.PromoteHeaders(Csv.Document([Content], [Delimiter = ";", Encoding = 65001, QuoteStyle = QuoteStyle.None]), [PromoteAllScalars = true])),

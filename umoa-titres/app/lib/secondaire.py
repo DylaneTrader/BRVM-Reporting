@@ -17,13 +17,79 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from dataclasses import asdict, dataclass, fields
+
 from . import chargement, qualite_prix
+
+
+@dataclass(frozen=True)
+class FiltreSecondaire:
+    """Traitement du marché secondaire, réglable dans l'application et dans Power BI.
+
+    Les lignes ne sont jamais supprimées des fichiers : chaque réglage retire des lignes du calcul
+    affiché. Défauts : doublons exacts et rendements nuls ou négatifs écartés, aucune exigence de
+    profondeur (sur l'historique, 53 % des lignes n'ont qu'une transaction ; exiger au moins 3
+    transactions retire 82 % des lignes et 60 % du volume).
+    """
+
+    #: Nombre minimal de transactions d'une ligne (1 = toutes les lignes).
+    min_transactions: int = 1
+    #: Écarter les transactions publiées deux fois à l'identique.
+    exclure_doublons: bool = True
+    #: Écarter les rendements nuls ou négatifs.
+    exclure_rendements_non_positifs: bool = True
+    #: Écarter les lignes classées C (atypiques) par `qualite_prix`.
+    exclure_atypiques: bool = False
+    #: Volume global minimal d'une ligne (Mds FCFA), 0 = pas de seuil.
+    volume_min_mds: float = 0.0
+
+    @classmethod
+    def depuis_etat(cls, etat: dict | None) -> "FiltreSecondaire":
+        if not etat:
+            return cls()
+        connus = {f.name for f in fields(cls)}
+        return cls(**{k: v for k, v in etat.items() if k in connus})
+
+    def en_dict(self) -> dict:
+        return asdict(self)
+
+
+def filtrer(donnees: pd.DataFrame, filtre: FiltreSecondaire | None = None) -> pd.DataFrame:
+    """Lignes retenues par ``filtre`` ; ``donnees.attrs["retirees"]`` compte les lignes retirées
+    par motif (une ligne compte pour le premier motif qui l'écarte)."""
+    filtre = filtre or FiltreSecondaire()
+    garde = pd.Series(True, index=donnees.index)
+    retirees = {}
+
+    def _retirer(motif: str, masque: pd.Series) -> None:
+        nonlocal garde
+        masque = masque.fillna(False).astype(bool) & garde
+        retirees[motif] = int(masque.sum())
+        garde &= ~masque
+
+    if filtre.exclure_doublons and "Doublon" in donnees:
+        _retirer("doublon", donnees["Doublon"].astype(bool))
+    if filtre.exclure_rendements_non_positifs:
+        _retirer("rendement nul ou négatif", pd.to_numeric(donnees["Rendement moyen"], errors="coerce").le(0))
+    if filtre.min_transactions > 1:
+        _retirer(f"moins de {filtre.min_transactions} transactions",
+                 pd.to_numeric(donnees["Nombre de transactions"], errors="coerce") < filtre.min_transactions)
+    if filtre.volume_min_mds > 0:
+        _retirer(f"volume sous {filtre.volume_min_mds:g} Mds FCFA",
+                 pd.to_numeric(donnees["Volume global (Mds FCFA)"], errors="coerce") < filtre.volume_min_mds)
+    if filtre.exclure_atypiques and "Score" in donnees:
+        _retirer("prix atypique (C)", donnees["Score"] == qualite_prix.SCORE_C)
+    resultat = donnees[garde].copy()
+    resultat.attrs["retirees"] = retirees
+    return resultat
 
 
 def transactions(params_qualite: qualite_prix.ParametresQualite | None = None,
                  niveau_courbe: str = "officielle",
-                 params_courbe=None) -> pd.DataFrame:
-    """Transactions du marché secondaire, enrichies du score de fiabilité."""
+                 params_courbe=None,
+                 filtre: FiltreSecondaire | None = None) -> pd.DataFrame:
+    """Transactions du marché secondaire, enrichies du score de fiabilité, puis filtrées par
+    ``filtre`` (``FiltreSecondaire()`` par défaut ; ``attrs["retirees"]`` : lignes retirées)."""
     brutes = chargement.marche_secondaire()
     evaluees = qualite_prix.evaluer(brutes, params_qualite, niveau_courbe,
                                     params_courbe)
@@ -31,7 +97,7 @@ def transactions(params_qualite: qualite_prix.ParametresQualite | None = None,
     evaluees["Mois"] = (evaluees["Date de transaction"].dt.to_period("M")
                         .dt.to_timestamp())
     evaluees["Année"] = evaluees["Date de transaction"].dt.year
-    return evaluees
+    return filtrer(evaluees, filtre)
 
 
 def _rendement_pondere(donnees: pd.DataFrame) -> float:

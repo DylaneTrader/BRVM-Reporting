@@ -44,7 +44,6 @@ table Fondamentaux
 		mode: import
 		source =
 				let
-				    CheminDonnees = "c:\Users\DYLANE\OneDrive - CGF BOURSE\Bureau\MES MINI-APPS\BRVM app\data",
 				    NettoyerNombre = (t as nullable text) as nullable number =>
 				        let
 				            brut = if t = null then null else Text.Trim(t),
@@ -53,7 +52,7 @@ table Fondamentaux
 				            resultat = if sansEspaces = null or sansEspaces = "" or sansEspaces = "N/A" or sansEspaces = "-" then null else try Number.FromText(Text.Replace(sansEspaces, ",", "."), "en-US") otherwise null
 				        in
 				            resultat,
-				    Source = Folder.Files(CheminDonnees & "\fondamentaux"),
+				    Source = GitHubDossier("data/fondamentaux", "_fondamentaux.json"),
 				    Fichiers = Table.SelectRows(Source, each Text.EndsWith([Name], "_fondamentaux.json")),
 				    AjoutRecord = Table.AddColumn(Fichiers, "R", each Json.Document([Content], 65001)),
 				    AjoutLignes = Table.AddColumn(AjoutRecord, "Rows", each

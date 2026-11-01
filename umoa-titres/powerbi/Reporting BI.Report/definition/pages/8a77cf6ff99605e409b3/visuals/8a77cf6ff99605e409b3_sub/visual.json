@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
   "name": "8a77cf6ff99605e409b3_sub",
   "position": {
-    "x": 15.960591133004927,
-    "y": 72.709359605911331,
+    "x": 204,
+    "y": 39,
     "z": 11000,
-    "height": 38.128078817733993,
-    "width": 1248.4729064039409,
+    "height": 34,
+    "width": 1060,
     "tabOrder": 11000
   },
   "visual": {
@@ -19,11 +19,11 @@
               {
                 "textRuns": [
                   {
-                    "value": "CGF Gestion · Tableau de bord destiné aux gestionnaires de portefeuilles",
+                    "value": "Tableau de bord destiné aux gestionnaires de portefeuilles",
                     "textStyle": {
                       "fontFamily": "Segoe UI",
-                      "fontSize": "12px",
-                      "color": "#5b6b8c"
+                      "fontSize": "11px",
+                      "color": "#FFFFFF"
                     }
                   }
                 ]

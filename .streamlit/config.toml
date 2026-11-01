@@ -1,0 +1,7 @@
+# Thème des applications Streamlit de Reporting : couleurs du thème Power BI « Simple Header - Blue ».
+[theme]
+base = "light"
+primaryColor = "#2C4770"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#E9ECF2"
+textColor = "#1F2F4C"

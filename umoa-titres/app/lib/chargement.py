@@ -192,7 +192,7 @@ def calendrier() -> pd.DataFrame:
 
 @_cache
 def benchmark() -> pd.DataFrame:
-    """Indice obligataire CGF (base 100), mensuel."""
+    """Indice obligataire (base 100), mensuel."""
     chemin = DOSSIER_BENCHMARK / "benchmark_obligataire.csv"
     if not chemin.exists():
         return pd.DataFrame()
