@@ -29,8 +29,7 @@ table Dim_Indice
 		mode: import
 		source =
 				let
-				    CheminDonnees = DossierDonnees,
-				    Source = Folder.Files(CheminDonnees & "\indices"),
+				    Source = GitHubDossier("data/indices", "_info.json"),
 				    FichiersInfo = Table.SelectRows(Source, each Text.EndsWith([Name], "_info.json")),
 				    AjoutSymbol = Table.AddColumn(FichiersInfo, "Symbol", each Text.BeforeDelimiter([Name], "_info.json"), type text),
 				    AjoutRecord = Table.AddColumn(AjoutSymbol, "R", each Json.Document([Content], 65001)),

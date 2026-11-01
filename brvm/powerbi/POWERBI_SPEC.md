@@ -450,7 +450,7 @@ Page de documentation. En Power BI : **zones de texte + images de formules** org
 
 ## 8. Points d'attention pour l'agent constructeur
 1. **Locale FR** dans Power Query (séparateur `;`, décimale `,`, montants avec espaces, `%`).
-2. **Dépivoter** les ~47 CSV actions et ~13 CSV indices en tables longues via *Dossier* (Folder connector) + `Symbol` = nom de fichier.
+2. **Dépivoter** les ~47 CSV actions et ~13 CSV indices en tables longues via la fonction `GitHubDossier` (lecture de `data/` de Scraper-BRVM par l'API GitHub, à la manière du connecteur Dossier) + `Symbol` = nom de fichier.
 3. **Pré-calculer** dans le repo de scraping tout ce qui est trop lourd en DAX : indicateurs techniques, matrices de corrélation, bêtas glissants, régime de marché, Fear & Greed, sorties ML. Fournir ces résultats en CSV/JSON dans `data/` — c'est le **chemin le plus fidèle et le plus performant**.
 4. **Cohérence des chiffres** : répliquer les formules de `utils.py` (fenêtres WTD/MTD/QTD/STD/YTD/OTD, cumulés base 100, drawdown, volatilité annualisée ×√252).
 5. **Respecter la charte** (section 1) sur tous les visuels : fonds beige, accents brun/taupe, vert/rouge sémantiques, échelles divergentes centrées sur 0.

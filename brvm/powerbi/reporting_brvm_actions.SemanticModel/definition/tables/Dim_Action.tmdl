@@ -123,8 +123,7 @@ table Dim_Action
 				            resultat = if sansEspaces = null or sansEspaces = "" or sansEspaces = "N/A" or sansEspaces = "-" then null else try Number.FromText(Text.Replace(sansEspaces, ",", "."), "en-US") otherwise null
 				        in
 				            resultat,
-				    CheminDonnees = DossierDonnees,
-				    Source = Folder.Files(CheminDonnees & "\societes"),
+				    Source = GitHubDossier("data/societes", "_societe.json"),
 				    FichiersJson = Table.SelectRows(Source, each Text.EndsWith([Name], "_societe.json")),
 				    AjoutRecord = Table.AddColumn(FichiersJson, "R", each Json.Document([Content], 65001)),
 				    Lignes = Table.SelectColumns(AjoutRecord, {"R"}),
