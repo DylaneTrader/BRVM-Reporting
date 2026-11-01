@@ -1,0 +1,22 @@
+Black-Litterman sans solution au 2020-05-29 : at least one of the assets must have an expected return exceeding the risk-free rate
+Black-Litterman sans solution au 2020-06-30 : at least one of the assets must have an expected return exceeding the risk-free rate
+Black-Litterman sans solution au 2020-08-31 : at least one of the assets must have an expected return exceeding the risk-free rate
+Black-Litterman sans solution au 2020-09-30 : ('Please check your objectives/constraints or use a different solver.', 'Solver status: user_limit')
+Prophet + Black-Litterman: 507s {'perf': np.float64(2.4182), 'perf_annualisee': np.float64(0.17), 'volatilite': np.float64(0.1346), 'sharpe': np.float64(0.9787), 'perte_max': -0.3203, 'frais': 17865849.9242, 'operations': 6427, 'rotation': np.float64(6.8757), 'tresorerie_moyenne': 0.1632, 'beta': 0.5433}
+Signaux Prophet seuls (ACHAT, parts égales): 498s {'perf': np.float64(2.7084), 'perf_annualisee': np.float64(0.1823), 'volatilite': np.float64(0.1319), 'sharpe': np.float64(1.0726), 'perte_max': -0.3061, 'frais': 16667922.9746, 'operations': 7342, 'rotation': np.float64(6.3434), 'tresorerie_moyenne': 0.1351, 'beta': 0.4653}
+Parts égales (catalogue): 2s {'perf': np.float64(6.3493), 'perf_annualisee': np.float64(0.2902), 'volatilite': np.float64(0.0936), 'sharpe': np.float64(2.375), 'perte_max': -0.2232, 'frais': 1908488.3458, 'operations': 4796, 'rotation': np.float64(0.5062), 'tresorerie_moyenne': 0.0182, 'beta': 0.5498}
+Markowitz max Sharpe (catalogue): 5s {'perf': np.float64(3.5817), 'perf_annualisee': np.float64(0.2146), 'volatilite': np.float64(0.1355), 'sharpe': np.float64(1.2418), 'perte_max': -0.5872, 'frais': 6679734.0583, 'operations': 4658, 'rotation': np.float64(2.5108), 'tresorerie_moyenne': 0.0603, 'beta': 0.6032}
+Momentum 12-1 (catalogue): 2s {'perf': np.float64(4.565), 'perf_annualisee': np.float64(0.2452), 'volatilite': np.float64(0.205), 'sharpe': np.float64(0.9961), 'perte_max': -0.5077, 'frais': 16088811.6921, 'operations': 4160, 'rotation': np.float64(3.362), 'tresorerie_moyenne': 0.1489, 'beta': 0.5034}
+BRVMC perf 2.076
+Traceback (most recent call last):
+  File "/tmp/claude-0/eval_dashboard/evaluer.py", line 41, in <module>
+    sortie.write_text(json.dumps(res, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
+                      ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/json/__init__.py", line 242, in dumps
+    **kw).encode(obj)
+          ~~~~~~^^^^^
+  File "/usr/local/lib/python3.13/json/encoder.py", line 202, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+  File "/usr/local/lib/python3.13/json/encoder.py", line 263, in iterencode
+    return _iterencode(o, 0)
+TypeError: keys must be str, int, float, bool or None, not Timestamp

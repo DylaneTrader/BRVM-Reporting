@@ -7,7 +7,7 @@ s'agisse d'un marché ou non.
 | Dossier | Contenu | Données lues |
 |---|---|---|
 | `brvm/simulateur-bourse/` | Simulateur de portefeuille d'actions BRVM (Next.js, SQLite, Prisma) | `data/` d'un clone voisin de `DylaneTrader/Scraper-BRVM` (`MARKET_DATA_DIR`) |
-| `brvm/dashboard/` | Tableau de bord HTML des actions BRVM (cours, fondamentaux, dividendes, signaux) | API GitHub de Scraper-BRVM, jeton passé une fois dans l'adresse (`#jeton=…`) |
+| `brvm/dashboard/` | Tableau de bord HTML des actions BRVM (cours, fondamentaux, dividendes, signaux) (et `evaluation/` : la stratégie rejouée dans le moteur de BRVM app) | API GitHub de Scraper-BRVM, jeton passé une fois dans l'adresse (`#jeton=…`) |
 | `brvm/powerbi/` | Rapport Power BI des actions BRVM (`reporting_brvm_actions.pbip`) et son cahier des charges | `data/` de Scraper-BRVM, par l'API GitHub (paramètre `GitHubToken`) |
 | `umoa-titres/app/` | Application Streamlit des titres publics UMOA et obligations BRVM : référentiel, fiche titre, courbes, primaire, secondaire, benchmark, risque de taux, calendrier, simulateur | `data/` d'un clone voisin de `DylaneTrader/Scraper-UMOA-Titres` (`UMOA_DATA_DIR`) |
 | `umoa-titres/powerbi/` | Rapport Power BI des titres publics (`Reporting BI.pbip`), configuration et méthodologie | `data/_bi/` de Scraper-UMOA-Titres, par l'API GitHub |
