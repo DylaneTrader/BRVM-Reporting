@@ -7,7 +7,7 @@ trois niveaux qui cohabitent en permanence, sans qu'aucun n'écrase l'autre :
 
     N0  brut       « Zéro Coupon » publié           -> audit, jamais par défaut
     N1  officielle « Taux Après Lissage » publié     -> référence de place, défaut
-    N2  cgf        reconstruction maison             -> analytique
+    N2  reconstruite reconstruction maison             -> analytique
 
 N2 corrige trois défauts mesurés du fichier source, sans toucher au niveau :
   1. la grille est trouée (le point 10 ans n'existe que sur 48 % des courbes,
@@ -32,12 +32,12 @@ from . import chargement
 
 NIVEAU_BRUT = "brut"
 NIVEAU_OFFICIELLE = "officielle"
-NIVEAU_CGF = "cgf"
+NIVEAU_RECONSTRUITE = "reconstruite"
 
 LIBELLES_NIVEAUX = {
     NIVEAU_BRUT: "Zéro coupon brut (UMOA-Titres)",
     NIVEAU_OFFICIELLE: "Courbe officielle lissée (UMOA-Titres)",
-    NIVEAU_CGF: "Courbe CGF (reconstruite)",
+    NIVEAU_RECONSTRUITE: "Courbe reconstruite",
 }
 
 _COLONNE_NIVEAU = {
@@ -563,7 +563,7 @@ def diagnostic_courbe(pays: str, date: pd.Timestamp,
 
     brut = points_publies(pays, date_courbe, NIVEAU_BRUT)
     officielle = points_publies(pays, date_courbe, NIVEAU_OFFICIELLE)
-    cgf = construire_courbe(pays, date_courbe, NIVEAU_CGF, params)
+    reconstruite = construire_courbe(pays, date_courbe, NIVEAU_RECONSTRUITE, params)
     ancrages = (points_ancrage_bat(pays, date_courbe, params)
                 if params.ancrage_bat else pd.DataFrame())
 
@@ -579,9 +579,9 @@ def diagnostic_courbe(pays: str, date: pd.Timestamp,
         "Points publiés": len(officielle),
         "Rugosité brut (pb)": _rugosite(brut["Taux"].to_numpy()),
         "Rugosité officielle (pb)": _rugosite(officielle["Taux"].to_numpy()),
-        "Rugosité CGF (pb)": _rugosite(cgf["Taux"].to_numpy()),
+        "Rugosité reconstruite (pb)": _rugosite(reconstruite["Taux"].to_numpy()),
         "Saut max officielle (pb)": _saut_max(officielle["Taux"].to_numpy()),
-        "Saut max CGF (pb)": _saut_max(cgf["Taux"].to_numpy()),
+        "Saut max reconstruit (pb)": _saut_max(reconstruite["Taux"].to_numpy()),
         "Inversion 3 mois / 1 an (pb)": (
             (trois_mois - un_an) * 10_000
             if not (np.isnan(trois_mois) or np.isnan(un_an)) else float("nan")),
@@ -622,15 +622,15 @@ def serie_temporelle(pays: list[str] | str, maturite: float,
 
 def comparer_niveaux(pays: str, date: pd.Timestamp,
                      params: ParametresCourbe | None = None) -> pd.DataFrame:
-    """Courbe officielle et courbe CGF côte à côte, avec l'écart en pb."""
+    """Courbe officielle et courbe reconstruite côte à côte, avec l'écart en pb."""
     params = params or ParametresCourbe()
-    cgf = construire_courbe(pays, date, NIVEAU_CGF, params)
-    if cgf.empty:
-        return cgf
+    reconstruite = construire_courbe(pays, date, NIVEAU_RECONSTRUITE, params)
+    if reconstruite.empty:
+        return reconstruite
     date_courbe = date_courbe_applicable(pays, date)
     officielle = points_publies(pays, date_courbe, NIVEAU_OFFICIELLE)
     brut = points_publies(pays, date_courbe, NIVEAU_BRUT)
-    resultat = cgf.rename(columns={"Taux": "Taux CGF"})
+    resultat = reconstruite.rename(columns={"Taux": "Taux reconstruit"})
     resultat["Taux officiel"] = np.interp(
         resultat["Maturité"], officielle["Maturité"], officielle["Taux"],
         left=np.nan, right=np.nan)
@@ -638,6 +638,6 @@ def comparer_niveaux(pays: str, date: pd.Timestamp,
         resultat["Taux brut"] = np.interp(
             resultat["Maturité"], brut["Maturité"], brut["Taux"],
             left=np.nan, right=np.nan)
-    resultat["Écart CGF - officiel (pb)"] = (
-        (resultat["Taux CGF"] - resultat["Taux officiel"]) * 10_000)
+    resultat["Écart reconstruit - officiel (pb)"] = (
+        (resultat["Taux reconstruit"] - resultat["Taux officiel"]) * 10_000)
     return resultat

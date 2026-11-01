@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Benchmark obligataire CGF : indice composite 30 % coté / 70 % non coté.
+"""Benchmark obligataire : indices coté et non coté, et leur composite (30 % coté / 70 % non coté par défaut).
 
 Construit par `scripts/construire_benchmark.py`, base 100 au 31/12/2019. Le
 classeur porte plus que la série mensuelle : performances annuelles avec
@@ -20,11 +20,12 @@ import pandas as pd
 from .chargement import DOSSIER_BENCHMARK, _cache
 
 CHEMIN_CLASSEUR = DOSSIER_BENCHMARK / "benchmark_obligataire.xlsx"
+VALEUR_BASE = 100.0
 
-INDICES = {
-    "Indice obligataire (30/70)": "#1f6f8b",
-    "Indice coté": "#c98a2e",
-    "Indice non coté": "#2e7d5b",
+INDICES = {  # couleurs du thème Simple Header - Blue
+    "Indice obligataire (30/70)": "#2C4770",
+    "Indice coté": "#c7984b",
+    "Indice non coté": "#3B5E94",
 }
 
 #: Limites documentées dans `Limites_Methodologie_Benchmark_Obligataire.md`.
@@ -135,6 +136,51 @@ def resume(donnees: pd.DataFrame) -> dict:
             (1 + performance) ** (12 / mois) - 1 if mois > 0 and pd.notna(performance)
             else np.nan)
     return resultat
+
+
+def libelle_composite(poids_cote: float) -> str:
+    """« Indice obligataire (30/70) », « Indice coté seul », « Indice non coté seul »."""
+    pc = round(float(poids_cote) * 100)
+    if pc >= 100:
+        return "Indice coté seul"
+    if pc <= 0:
+        return "Indice non coté seul"
+    return f"Indice obligataire ({pc}/{100 - pc})"
+
+
+def composite(donnees: pd.DataFrame, poids_cote: float = 0.30) -> pd.DataFrame:
+    """Benchmark recomposé avec une part ``poids_cote`` (entre 0 et 1) pour l'indice coté.
+
+    Les deux sous-indices sont construits par ``scripts/construire_benchmark.py`` à chaque
+    actualisation ; seule la pondération change ici. Comme dans le classeur, ce sont les
+    rendements mensuels qui sont pondérés (rééquilibrage mensuel), puis chaînés en base 100.
+
+    Mois sans cotation BRVM (« Coté disponible » faux) : un composite mixte se replie sur le seul
+    non coté ; l'indice coté seul reste à son niveau (rendement nul) et la colonne « Repli » le
+    signale. Rend : Date, Mois, Rendement, Indice, Repli, Libellé.
+    """
+    if not 0 <= poids_cote <= 1:
+        raise ValueError(f"part du coté hors de [0 ; 1] : {poids_cote}")
+    if donnees.empty:
+        return pd.DataFrame(columns=["Date", "Mois", "Rendement", "Indice", "Repli", "Libellé"])
+    nc = donnees["Rendement non coté"].astype(float)
+    co = donnees["Rendement coté"].astype(float)
+    dispo = co.notna()
+    if poids_cote >= 1:
+        rendement = co.fillna(0.0)
+    elif poids_cote <= 0:
+        rendement = nc
+    else:
+        rendement = pd.Series(np.where(dispo, poids_cote * co + (1 - poids_cote) * nc, nc),
+                              index=donnees.index)
+    rendement = rendement.fillna(0.0)
+    indice = VALEUR_BASE * (1 + rendement).cumprod()
+    if "Couverture" in donnees and (donnees["Couverture"] == "Base").any():
+        indice = indice / indice[donnees["Couverture"] == "Base"].iloc[0] * VALEUR_BASE
+    return pd.DataFrame({"Date": donnees["Date"], "Mois": donnees.get("Mois"),
+                         "Rendement": rendement, "Indice": indice,
+                         "Repli": (~dispo) & (poids_cote > 0) & (donnees.get("Couverture") != "Base"),
+                         "Libellé": libelle_composite(poids_cote)})
 
 
 def rendements_mensuels(donnees: pd.DataFrame) -> pd.DataFrame:

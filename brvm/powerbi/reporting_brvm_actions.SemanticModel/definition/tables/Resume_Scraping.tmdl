@@ -49,7 +49,7 @@ table Resume_Scraping
 		mode: import
 		source =
 				let
-				    CheminDonnees = "c:\Users\DYLANE\OneDrive - CGF BOURSE\Bureau\MES MINI-APPS\BRVM app\data",
+				    CheminDonnees = DossierDonnees,
 				    Source = Csv.Document(File.Contents(CheminDonnees & "\resume_scraping.csv"), [Delimiter = ";", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
 				    EnTetes = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
 				    TypesDates = Table.TransformColumnTypes(EnTetes, {{"Date_Min", type date}, {"Date_Max", type date}}, "en-US"),

@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
   "name": "aa11bb22cc33dd44ee03",
   "position": {
-    "x": 16,
-    "y": 12,
+    "x": 204,
+    "y": 2,
     "z": 1000,
-    "height": 44,
-    "width": 640,
+    "height": 34,
+    "width": 1060,
     "tabOrder": 3000
   },
   "visual": {
@@ -22,54 +22,13 @@
                     "value": "Tableau de bord du marché : BRVM Actions",
                     "textStyle": {
                       "fontWeight": "bold",
-                      "fontSize": "18pt",
+                      "fontSize": "18px",
                       "color": "#FFFFFF"
                     }
                   }
                 ]
               }
             ]
-          }
-        }
-      ]
-    },
-    "visualContainerObjects": {
-      "background": [
-        {
-          "properties": {
-            "show": {
-              "expr": {
-                "Literal": {
-                  "Value": "false"
-                }
-              }
-            }
-          }
-        }
-      ],
-      "border": [
-        {
-          "properties": {
-            "show": {
-              "expr": {
-                "Literal": {
-                  "Value": "false"
-                }
-              }
-            }
-          }
-        }
-      ],
-      "dropShadow": [
-        {
-          "properties": {
-            "show": {
-              "expr": {
-                "Literal": {
-                  "Value": "false"
-                }
-              }
-            }
           }
         }
       ]

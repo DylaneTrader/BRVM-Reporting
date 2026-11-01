@@ -29,7 +29,7 @@ table Dim_Indice
 		mode: import
 		source =
 				let
-				    CheminDonnees = "c:\Users\DYLANE\OneDrive - CGF BOURSE\Bureau\MES MINI-APPS\BRVM app\data",
+				    CheminDonnees = DossierDonnees,
 				    Source = Folder.Files(CheminDonnees & "\indices"),
 				    FichiersInfo = Table.SelectRows(Source, each Text.EndsWith([Name], "_info.json")),
 				    AjoutSymbol = Table.AddColumn(FichiersInfo, "Symbol", each Text.BeforeDelimiter([Name], "_info.json"), type text),

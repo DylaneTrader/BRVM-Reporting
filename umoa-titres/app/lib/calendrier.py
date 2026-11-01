@@ -307,7 +307,7 @@ def ics(evenements_a_exporter: pd.DataFrame) -> str:
     de séance, et en inventer une donnerait une fausse précision.
     """
     lignes = ["BEGIN:VCALENDAR", "VERSION:2.0",
-              "PRODID:-//CGF Gestion//Calendrier UMOA-Titres//FR",
+              "PRODID:-//Scraper-UMOA-Titres//Calendrier UMOA-Titres//FR",
               "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
               "X-WR-CALNAME:Émissions UMOA-Titres"]
     for _, evenement in evenements_a_exporter.iterrows():

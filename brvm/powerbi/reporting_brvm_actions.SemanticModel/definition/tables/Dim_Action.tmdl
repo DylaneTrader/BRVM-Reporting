@@ -123,7 +123,7 @@ table Dim_Action
 				            resultat = if sansEspaces = null or sansEspaces = "" or sansEspaces = "N/A" or sansEspaces = "-" then null else try Number.FromText(Text.Replace(sansEspaces, ",", "."), "en-US") otherwise null
 				        in
 				            resultat,
-				    CheminDonnees = "c:\Users\DYLANE\OneDrive - CGF BOURSE\Bureau\MES MINI-APPS\BRVM app\data",
+				    CheminDonnees = DossierDonnees,
 				    Source = Folder.Files(CheminDonnees & "\societes"),
 				    FichiersJson = Table.SelectRows(Source, each Text.EndsWith([Name], "_societe.json")),
 				    AjoutRecord = Table.AddColumn(FichiersJson, "R", each Json.Document([Content], 65001)),

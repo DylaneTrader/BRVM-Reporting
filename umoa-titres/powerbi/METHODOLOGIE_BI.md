@@ -1,7 +1,7 @@
 # Méthodologie de calcul des éléments du reporting BI
 
 Ce document décrit **précisément comment chaque indicateur du rapport Power BI
-« CGF Gestion »** est calculé : d'où viennent les données brutes, quelles
+des titres publics UMOA** est calculé : d'où viennent les données brutes, quelles
 transformations leur sont appliquées, quelles formules financières sont
 utilisées, et quelles conventions ont été retenues. Il complète
 [`DOCUMENTATION.md`](DOCUMENTATION.md) (qui explique l'architecture technique du

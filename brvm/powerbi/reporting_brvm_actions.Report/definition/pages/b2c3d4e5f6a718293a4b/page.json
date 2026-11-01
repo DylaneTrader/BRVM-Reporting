@@ -14,12 +14,28 @@
     "background": [
       {
         "properties": {
-          "color": {
-            "solid": {
-              "color": {
+          "image": {
+            "image": {
+              "name": {
                 "expr": {
                   "Literal": {
-                    "Value": "'#F4F6FA'"
+                    "Value": "'Overview'"
+                  }
+                }
+              },
+              "url": {
+                "expr": {
+                  "ResourcePackageItem": {
+                    "PackageName": "RegisteredResources",
+                    "PackageType": 1,
+                    "ItemName": "Overview.svg"
+                  }
+                }
+              },
+              "scaling": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'Normal'"
                   }
                 }
               }
@@ -29,6 +45,17 @@
             "expr": {
               "Literal": {
                 "Value": "0D"
+              }
+            }
+          },
+          "color": {
+            "solid": {
+              "color": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'#d2d2d2'"
+                  }
+                }
               }
             }
           }

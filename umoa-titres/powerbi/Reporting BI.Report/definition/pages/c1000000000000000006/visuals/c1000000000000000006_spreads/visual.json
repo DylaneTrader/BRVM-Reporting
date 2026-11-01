@@ -2,7 +2,7 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
   "name": "c1000000000000000006_spreads",
   "position": {
-    "x": 619.70149253731347,
+    "x": 619.7014925373135,
     "y": 509.55223880597015,
     "z": 6000,
     "height": 210.44776119402985,

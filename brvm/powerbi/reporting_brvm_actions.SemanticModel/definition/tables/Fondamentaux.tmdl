@@ -44,7 +44,7 @@ table Fondamentaux
 		mode: import
 		source =
 				let
-				    CheminDonnees = "c:\Users\DYLANE\OneDrive - CGF BOURSE\Bureau\MES MINI-APPS\BRVM app\data",
+				    CheminDonnees = DossierDonnees,
 				    NettoyerNombre = (t as nullable text) as nullable number =>
 				        let
 				            brut = if t = null then null else Text.Trim(t),

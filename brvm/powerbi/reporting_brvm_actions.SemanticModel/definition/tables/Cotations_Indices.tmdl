@@ -69,7 +69,7 @@ table Cotations_Indices
 		mode: import
 		source =
 				let
-				    CheminDonnees = "c:\Users\DYLANE\OneDrive - CGF BOURSE\Bureau\MES MINI-APPS\BRVM app\data",
+				    CheminDonnees = DossierDonnees,
 				    Source = Folder.Files(CheminDonnees & "\indices"),
 				    FichiersHistorique = Table.SelectRows(Source, each Text.EndsWith([Name], "_historique.csv")),
 				    AjoutSymbol = Table.AddColumn(FichiersHistorique, "Symbol", each Text.BeforeDelimiter([Name], "_historique.csv"), type text),

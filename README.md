@@ -8,9 +8,9 @@ s'agisse d'un marché ou non.
 |---|---|---|
 | `brvm/simulateur-bourse/` | Simulateur de portefeuille d'actions BRVM (Next.js, SQLite, Prisma) | `data/` d'un clone voisin de `DylaneTrader/Scraper-BRVM` (`MARKET_DATA_DIR`) |
 | `brvm/dashboard/` | Tableau de bord HTML des actions BRVM (cours, fondamentaux, dividendes, signaux) | API GitHub de Scraper-BRVM, jeton passé une fois dans l'adresse (`#jeton=…`) |
-| `brvm/powerbi/` | Rapport Power BI des actions BRVM (`reporting_brvm_actions.pbip`) et son cahier des charges | dossier `data/` local (paramètre `CheminDonnees`) |
+| `brvm/powerbi/` | Rapport Power BI des actions BRVM (`reporting_brvm_actions.pbip`) et son cahier des charges | dossier `data/` d'un clone de Scraper-BRVM (paramètre `DossierDonnees`) |
 | `umoa-titres/app/` | Application Streamlit des titres publics UMOA et obligations BRVM : référentiel, fiche titre, courbes, primaire, secondaire, benchmark, risque de taux, calendrier, simulateur | `data/` d'un clone voisin de `DylaneTrader/Scraper-UMOA-Titres` (`UMOA_DATA_DIR`) |
-| `umoa-titres/powerbi/` | Rapport Power BI CGF Gestion des titres publics (`Reporting BI.pbip`), configuration et méthodologie | `data/_bi/` de Scraper-UMOA-Titres, par l'API GitHub |
+| `umoa-titres/powerbi/` | Rapport Power BI des titres publics (`Reporting BI.pbip`), configuration et méthodologie | `data/_bi/` de Scraper-UMOA-Titres, par l'API GitHub |
 
 Un nouveau reporting (présentation PowerPoint, autre marché, sujet interne) prend son propre dossier, au
 premier niveau ou sous celui de son sujet.
@@ -39,10 +39,13 @@ Simulateur BRVM : voir [brvm/simulateur-bourse/README.md](brvm/simulateur-bourse
 
 ## Power BI
 
-**BRVM.** Le modèle lit un dossier `data/` local : la valeur de `CheminDonnees` est écrite dans chaque table
-(`brvm/powerbi/reporting_brvm_actions.SemanticModel/definition/tables/*.tmdl`). Elle désigne encore le dossier
-`data/` de BRVM app sur le poste d'origine ; il reste à jour, car brvm-app recopie les données de
-Scraper-BRVM. Pour lire Scraper-BRVM directement, remplacer ce chemin dans les huit tables.
+**Thème.** Les deux rapports utilisent le thème « Simple Header - Blue » (`outils/theme_simple_header_blue/`) :
+bandeau bleu en haut de chaque page, titre et sous-titre en blanc dans le bandeau, palette bleue. Pour
+l'appliquer à un autre rapport PBIR, rapport fermé dans Power BI Desktop :
+`python outils/appliquer_theme_powerbi.py "<dossier>.Report"`.
+
+**BRVM.** Le modèle lit le dossier `data/` d'un clone de Scraper-BRVM, désigné par le paramètre
+`DossierDonnees` (Transformer les données, puis Gérer les paramètres ; défaut `C:\Scraper-BRVM\data`).
 `.github/workflows/refresh-powerbi.yml` déclenche l'actualisation du jeu de données publié chaque jour ouvré à
 23 h 40 UTC, puis le lendemain à 6 h 40 UTC. Il demande cinq secrets : `PBI_TENANT_ID`, `PBI_CLIENT_ID`,
 `PBI_CLIENT_SECRET` (principal de service Azure AD autorisé sur l'espace de travail), `PBI_GROUP_ID` et
@@ -50,7 +53,13 @@ Scraper-BRVM. Pour lire Scraper-BRVM directement, remplacer ce chemin dans les h
 
 **UMOA-Titres.** Le rapport lit `data/_bi/*.csv` de Scraper-UMOA-Titres par l'API GitHub, avec un jeton en
 lecture saisi dans le paramètre `GitHubToken` : voir
-[umoa-titres/powerbi/CONFIGURATION_POWERBI.md](umoa-titres/powerbi/CONFIGURATION_POWERBI.md).
+[umoa-titres/powerbi/CONFIGURATION_POWERBI.md](umoa-titres/powerbi/CONFIGURATION_POWERBI.md). La page Marché secondaire porte trois
+segments de traitement : plage du nombre de transactions, score de fiabilité du prix (A cohérent, B à
+surveiller, C atypique) et doublons.
+
+**Application UMOA-Titres.** La page Benchmark choisit la part de l'indice coté (0 : non coté seul, 100 :
+coté seul) ; la page Marché secondaire règle le traitement des lignes (nombre minimal de transactions,
+doublons, rendements non positifs, prix atypiques, volume minimal).
 
 Le cache local (`.pbi/cache.abf`) n'est pas versionné : le premier chargement actualise les données.
 

@@ -6,7 +6,7 @@ il est repris d'UMOA-Titres. Trois niveaux cohabitent en permanence :
 
     N0  brut       « Zéro Coupon » publié          -> audit
     N1  officielle « Taux Après Lissage » publié    -> référence de place, défaut
-    N2  cgf        reconstruction maison            -> analytique
+    N2  reconstruite reconstruction maison            -> analytique
 
 Cette page est l'endroit où l'on règle N2 et où l'on voit ce que ce réglage
 change, avant de l'appliquer au reste de l'app.
@@ -30,7 +30,7 @@ st.set_page_config(page_title="Courbes de taux", page_icon="📉", layout="wide"
 COULEURS_NIVEAUX = {
     courbes.NIVEAU_BRUT: "#9aa0a6",
     courbes.NIVEAU_OFFICIELLE: "#1f6f8b",
-    courbes.NIVEAU_CGF: "#b23a3a",
+    courbes.NIVEAU_RECONSTRUITE: "#b23a3a",
 }
 COULEURS_ORIGINES = {
     "Publié": "#1f6f8b", "Ancré (BAT)": "#2e7d5b",
@@ -75,10 +75,10 @@ with st.sidebar:
                         format_func=lambda d: f"{d:%d/%m/%Y}")
     niveaux = st.multiselect(
         "Niveaux affichés", list(courbes.LIBELLES_NIVEAUX),
-        default=[courbes.NIVEAU_OFFICIELLE, courbes.NIVEAU_CGF],
+        default=[courbes.NIVEAU_OFFICIELLE, courbes.NIVEAU_RECONSTRUITE],
         format_func=lambda n: courbes.LIBELLES_NIVEAUX[n])
 
-    st.header("Réglages de la courbe CGF (N2)")
+    st.header("Réglages de la courbe reconstruite (N2)")
     st.caption("Ces réglages ne touchent ni au brut ni à l'officielle : les "
                "trois niveaux restent disponibles côte à côte.")
 
@@ -187,7 +187,7 @@ with onglets[0]:
                                  _cle=niveau)
         tables.append(donnees)
         marque = alt.Chart(donnees).mark_line(
-            point=(niveau != courbes.NIVEAU_CGF),
+            point=(niveau != courbes.NIVEAU_RECONSTRUITE),
             strokeDash=[4, 3] if niveau == courbes.NIVEAU_BRUT else [0]).encode(
             x=alt.X("Maturité:Q", title="Maturité (années)"),
             y=alt.Y("Taux:Q", title="Taux", axis=alt.Axis(format="%"),
@@ -210,9 +210,9 @@ with onglets[0]:
                 title=f"{pays} — courbe du {date_courbe:%d/%m/%Y}"),
             width="stretch")
 
-        cgf = next((t for t in tables if t["_cle"].iloc[0] == courbes.NIVEAU_CGF), None)
-        if cgf is not None:
-            origines = alt.Chart(cgf).mark_tick(thickness=3, size=26).encode(
+        reconstruite = next((t for t in tables if t["_cle"].iloc[0] == courbes.NIVEAU_RECONSTRUITE), None)
+        if reconstruite is not None:
+            origines = alt.Chart(reconstruite).mark_tick(thickness=3, size=26).encode(
                 x=alt.X("Maturité:Q", title="Maturité (années)"),
                 color=alt.Color("Origine:N", title="Origine du point",
                                 scale=alt.Scale(
@@ -235,40 +235,40 @@ with onglets[0]:
                               "plus la courbe est lisse.")
         cartes[2].metric("Rugosité officielle",
                          _pb(diagnostic["Rugosité officielle (pb)"]))
-        cartes[3].metric("Rugosité CGF", _pb(diagnostic["Rugosité CGF (pb)"]))
+        cartes[3].metric("Rugosité (reconstruite)", _pb(diagnostic["Rugosité reconstruite (pb)"]))
         cartes[4].metric("Inversion 3 mois / 1 an",
                          _pb(diagnostic["Inversion 3 mois / 1 an (pb)"]),
                          help="Positif = le 3 mois cote au-dessus du 1 an. "
                               "7,7 % des courbes dépassent +100 pb, ce qui n'est "
                               "pas économiquement plausible.")
 
-        saut = diagnostic["Saut max CGF (pb)"]
+        saut = diagnostic["Saut max reconstruit (pb)"]
         if not pd.isna(saut) and saut > 200:
             st.warning(
                 f"Saut de **{saut:.0f} pb** entre deux maturités voisines de la "
-                "courbe CGF. L'ancrage ne corrige que les maturités "
+                "courbe reconstruite. L'ancrage ne corrige que les maturités "
                 "effectivement adjugées sur la période : là où l'État n'a pas "
                 "émis, le point publié subsiste tel quel.")
 
     comparaison = courbes.comparer_niveaux(pays, date, params)
     if not comparaison.empty:
-        st.subheader("Officielle contre CGF")
-        ecarts = comparaison["Écart CGF - officiel (pb)"].dropna()
+        st.subheader("Officielle contre reconstruite")
+        ecarts = comparaison["Écart reconstruit - officiel (pb)"].dropna()
         if not ecarts.empty:
             resume = st.columns(3)
             resume[0].metric("Écart médian", _pb(ecarts.median()))
             resume[1].metric("Écart maximum", _pb(ecarts.abs().max()))
             resume[2].metric("Points comparables", len(ecarts),
                              help="Au-delà de la dernière maturité publiée, il "
-                                  "n'y a rien à comparer : la CGF extrapole.")
+                                  "n'y a rien à comparer : la reconstruite extrapole.")
         st.dataframe(
             comparaison, hide_index=True, width="stretch", height=340,
             column_config={
                 "Maturité": st.column_config.NumberColumn(format="%.2f"),
-                "Taux CGF": st.column_config.NumberColumn(format="percent"),
+                "Taux reconstruit": st.column_config.NumberColumn(format="percent"),
                 "Taux officiel": st.column_config.NumberColumn(format="percent"),
                 "Taux brut": st.column_config.NumberColumn(format="percent"),
-                "Écart CGF - officiel (pb)": st.column_config.NumberColumn(format="%.0f"),
+                "Écart reconstruit - officiel (pb)": st.column_config.NumberColumn(format="%.0f"),
             })
 
 # --------------------------------------------------------------------------
@@ -276,7 +276,7 @@ with onglets[0]:
 # --------------------------------------------------------------------------
 with onglets[1]:
     if not params.ancrage_bat:
-        st.info("L'ancrage est désactivé. La courbe CGF reprend les points "
+        st.info("L'ancrage est désactivé. La courbe reconstruite reprend les points "
                 "publiés tels quels sur tout le spectre.")
     else:
         date_courbe = courbes.date_courbe_applicable(pays, date)
@@ -322,7 +322,7 @@ with onglets[1]:
 # --------------------------------------------------------------------------
 with onglets[2]:
     niveau_comparaison = st.radio(
-        "Niveau", [courbes.NIVEAU_OFFICIELLE, courbes.NIVEAU_CGF],
+        "Niveau", [courbes.NIVEAU_OFFICIELLE, courbes.NIVEAU_RECONSTRUITE],
         format_func=lambda n: courbes.LIBELLES_NIVEAUX[n], horizontal=True)
     selection = st.multiselect("Pays comparés", pays_liste, default=pays_liste)
     empilees = []
@@ -359,7 +359,7 @@ with onglets[3]:
     profondeur = reglages[1].selectbox("Profondeur", [1, 2, 3, 5, 10], index=2,
                                        format_func=lambda a: f"{a} an(s)")
     niveau_serie = reglages[2].radio(
-        "Niveau", [courbes.NIVEAU_OFFICIELLE, courbes.NIVEAU_CGF],
+        "Niveau", [courbes.NIVEAU_OFFICIELLE, courbes.NIVEAU_RECONSTRUITE],
         format_func=lambda n: courbes.LIBELLES_NIVEAUX[n], horizontal=True,
         key="niveau_serie")
 

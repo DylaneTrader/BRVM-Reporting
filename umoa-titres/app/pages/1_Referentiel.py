@@ -71,7 +71,7 @@ with st.sidebar:
         format_func=lambda n: courbes.LIBELLES_NIVEAUX[n],
         help="Sert au calcul de l'écart entre le dernier rendement observé et "
              "la courbe du pays. La courbe officielle UMOA-Titres est la "
-             "référence de place ; la courbe CGF est une reconstruction "
+             "référence de place ; la courbe reconstruite est une reconstruction "
              "interne (réglages à venir sur la page Courbes).")
 
 titres = _referentiel(niveau, courbes.parametres_actifs().en_dict())

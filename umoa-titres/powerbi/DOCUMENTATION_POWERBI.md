@@ -1,4 +1,4 @@
-# Rapport Power BI CGF Gestion : documentation
+# Rapport Power BI des titres publics UMOA : documentation
 
 Extrait de la documentation de `DylaneTrader/Scraper-UMOA-Titres` (sections 8 à 12), qui décrit la
 collecte et la préparation des fichiers `data/_bi/` lus par ce rapport. Les chemins `Reporting BI.*`
@@ -79,23 +79,24 @@ faits → `Dates[Date]`).
 
 ---
 
-## 9. Étape 7 — Le thème CGF Gestion
+## 9. Étape 7 : le thème Simple Header - Blue
 
-Fichier : [`Reporting BI.Report/StaticResources/RegisteredResources/CGFGestion.json`](Reporting%20BI.Report/StaticResources/RegisteredResources/CGFGestion.json)
-
-Reprend la **palette bleue du logo CGF Gestion** :
+Fichiers : [`outils/theme_simple_header_blue/`](../../outils/theme_simple_header_blue/), copiés dans
+`Reporting BI.Report/StaticResources/RegisteredResources/` par
+[`outils/appliquer_theme_powerbi.py`](../../outils/appliquer_theme_powerbi.py) : le thème
+`Simple-Header---Blue.json` et les fonds de page SVG du modèle Power BI « Simple Header - Blue ».
 
 | Rôle | Couleur |
 |---|---|
-| Bleu foncé (titres, KPI) | `#08306B` |
-| Bleu principal | `#0B5CAB` |
-| Bleu clair | `#1C86D1` |
-| Gris texte secondaire | `#5B6B8C` |
-| Fond de page (pâle) | `#EAF2FB` |
+| Bandeau haut, titres | `#1F2F4C` |
+| Bandeau bas, couleur principale | `#2C4770` |
+| Pavé gauche, couleur secondaire | `#3B5E94` |
+| Fond de page | `#D2D2D2` |
 
-Le thème définit aussi la **palette de séries** (8 couleurs pour les 8 pays), le
-style par défaut des visuels (fond blanc, bord arrondi, titres bleu foncé) et le
-fond de page.
+Chaque page porte le fond `Overview.svg` (bandeau de 75 px en haut, pavé de 192 px à gauche) ; le
+titre est dans la bande haute, le sous-titre dans la bande basse, en blanc ; la date de mise à jour
+est dans le pavé gauche. Le thème masque par défaut légendes et titres d'axes ; un visuel qui en a
+besoin les réactive dans son volet Format.
 
 **Enregistrement du thème** (dans `Reporting BI.Report/definition/report.json`) :
 il faut à la fois une entrée dans `resourcePackages` (type `RegisteredResources`)

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Point d'entrée de l'app CGF Gestion — marché obligataire UMOA.
+"""Point d'entrée de l'application : marché obligataire UMOA.
 
 Lancement :  streamlit run app/Accueil.py
 """
@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.lib import chargement, courbes  # noqa: E402
 
-st.set_page_config(page_title="Marché obligataire UMOA — CGF Gestion",
+st.set_page_config(page_title="Marché obligataire UMOA",
                    page_icon="📈", layout="wide")
 
 st.title("Marché obligataire UMOA")
@@ -49,7 +49,7 @@ st.markdown("""
   émission, sa vie secondaire et sa cotation. Accessible par drill depuis le
   référentiel, ou directement par `?titre=<ISIN>` dans l'URL.
 - **Courbes** — les trois niveaux de lecture (brut, officielle UMOA-Titres,
-  reconstruction CGF), les réglages de cette reconstruction et le diagnostic
+  reconstruction maison), les réglages de cette reconstruction et le diagnostic
   de qualité des courbes publiées.
 - **Marché primaire** — adjudications, taux de couverture, coût de financement
   effectivement servi et tension des enchères.
@@ -73,6 +73,6 @@ fraîcheur, d'appariement et d'anomalies de source.
 
 reglages = st.session_state.get(courbes.CLE_ETAT)
 if reglages:
-    st.info("Des réglages de courbe CGF personnalisés sont actifs pour cette "
+    st.info("Des réglages de courbe reconstruite personnalisés sont actifs pour cette "
             "session : ils s'appliquent au référentiel et aux fiches titre. "
             "La page Courbes permet de les revoir.")

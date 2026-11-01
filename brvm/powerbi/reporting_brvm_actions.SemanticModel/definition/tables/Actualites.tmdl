@@ -71,7 +71,7 @@ table Actualites
 		mode: import
 		source =
 				let
-				    CheminDonnees = "c:\Users\DYLANE\OneDrive - CGF BOURSE\Bureau\MES MINI-APPS\BRVM app\data",
+				    CheminDonnees = DossierDonnees,
 				    Source = Csv.Document(File.Contents(CheminDonnees & "\news\actualites_brvm.csv"), [Delimiter = ";", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
 				    EnTetes = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
 				    DatePub = Table.AddColumn(EnTetes, "DatePublication", each try Date.From(DateTimeZone.From([date_publication])) otherwise (try Date.From([date_publication], "fr-FR") otherwise null), type date),

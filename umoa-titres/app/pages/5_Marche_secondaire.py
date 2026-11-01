@@ -24,10 +24,11 @@ st.set_page_config(page_title="Marché secondaire", page_icon="🔄", layout="wi
 
 
 @st.cache_data(show_spinner="Évaluation des transactions…")
-def _transactions(seuils: dict, niveau: str, reglages: dict) -> pd.DataFrame:
+def _transactions(seuils: dict, niveau: str, reglages: dict, traitement: dict) -> pd.DataFrame:
     return secondaire.transactions(
         qualite_prix.ParametresQualite.depuis_etat(seuils), niveau,
-        courbes.ParametresCourbe.depuis_etat(reglages))
+        courbes.ParametresCourbe.depuis_etat(reglages),
+        secondaire.FiltreSecondaire.depuis_etat(traitement))
 
 
 @st.cache_data(show_spinner=False)
@@ -72,7 +73,29 @@ with st.sidebar:
                                         int(defauts.seuil_adjudication), 25),
     }
 
-toutes = _transactions(seuils, niveau, reglages_courbe)
+    st.header("Traitement des lignes")
+    base = secondaire.FiltreSecondaire()
+    traitement = {
+        "min_transactions": st.number_input(
+            "Nombre minimal de transactions", 1, 50, base.min_transactions, 1,
+            help="Une ligne (un titre, une séance) en dessous de ce nombre est écartée de tous "
+                 "les calculs. Sur l'historique, 53 % des lignes n'ont qu'une transaction ; "
+                 "exiger au moins 3 transactions retire 82 % des lignes et 60 % du volume."),
+        "exclure_doublons": st.checkbox("Écarter les doublons exacts", base.exclure_doublons),
+        "exclure_rendements_non_positifs": st.checkbox(
+            "Écarter les rendements nuls ou négatifs", base.exclure_rendements_non_positifs),
+        "exclure_atypiques": st.checkbox(
+            "Écarter les prix atypiques (C)", base.exclure_atypiques,
+            help="Sinon, ils restent dans l'univers complet et sont écartés de l'univers retenu."),
+        "volume_min_mds": st.number_input("Volume minimal d'une ligne (Mds FCFA)", 0.0, 100.0,
+                                          base.volume_min_mds, 0.5),
+    }
+
+toutes = _transactions(seuils, niveau, reglages_courbe, traitement)
+retirees = {k: v for k, v in toutes.attrs.get("retirees", {}).items() if v}
+if retirees:
+    st.caption("Lignes écartées par le traitement : "
+               + " ; ".join(f"{v} ({k})" for k, v in retirees.items()) + ".")
 
 with st.sidebar:
     annees = sorted(toutes["Année"].dropna().unique().astype(int))
@@ -329,7 +352,7 @@ with onglets[3]:
                      "Motifs"],
         )
         courbe = courbes.construire_courbe(
-            pays_nuage, reference, courbes.NIVEAU_CGF,
+            pays_nuage, reference, courbes.NIVEAU_RECONSTRUITE,
             courbes.ParametresCourbe.depuis_etat(reglages_courbe))
         couches = points
         if not courbe.empty:
